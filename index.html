@@ -27,6 +27,105 @@
         <p>Cargando...</p>
     </div>
 
+    <!-- Login Screen -->
+    <div id="loginScreen" class="auth-screen" style="display: none;">
+        <div class="auth-container">
+            <div class="auth-logo">💰</div>
+            <h1 class="auth-title">Finanzas App</h1>
+            <p class="auth-subtitle">Inicia sesión para continuar</p>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" id="loginUsername" required placeholder="Ej: jmorales08">
+                </div>
+
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="loginPassword" required placeholder="Mínimo 8 caracteres">
+                </div>
+
+                <div id="loginError" class="error-message"></div>
+
+                <button type="submit" class="btn-primary">Iniciar Sesión</button>
+            </form>
+
+            <p class="auth-link">
+                ¿No tienes cuenta? <a href="#" onclick="showRegister()">Regístrate aquí</a>
+            </p>
+
+            <div class="auth-footer">
+                <p>© 2024 Jordan's</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Screen -->
+    <div id="registerScreen" class="auth-screen" style="display: none;">
+        <div class="auth-container">
+            <div class="auth-logo">💰</div>
+            <h1 class="auth-title">Crear Cuenta</h1>
+            <p class="auth-subtitle">Completa tus datos</p>
+
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Nombres Completos</label>
+                    <input type="text" id="regNombres" required placeholder="Ej: Jordan Alejandro" oninput="generateUsername()">
+                </div>
+
+                <div class="form-group">
+                    <label>Apellidos Completos</label>
+                    <input type="text" id="regApellidos" required placeholder="Ej: Morales Vasquez" oninput="generateUsername()">
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha de Nacimiento</label>
+                    <input type="date" id="regFechaNac" required oninput="generateUsername()">
+                </div>
+
+                <div class="form-group">
+                    <label>Usuario (generado automáticamente)</label>
+                    <input type="text" id="regUsername" readonly placeholder="Se generará automáticamente">
+                </div>
+
+                <div class="form-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="regEmail" required placeholder="ejemplo@correo.com">
+                </div>
+
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="regPassword" required placeholder="Mínimo 8 caracteres, incluir números" oninput="validatePassword()">
+                    <small id="passwordStrength" class="password-strength"></small>
+                </div>
+
+                <div class="form-group">
+                    <label>Confirmar Contraseña</label>
+                    <input type="password" id="regPasswordConfirm" required placeholder="Repite tu contraseña">
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" id="regTerms" required>
+                        Acepto los <a href="#" onclick="showTerms()">términos y políticas de Jordan's</a>
+                    </label>
+                </div>
+
+                <div id="registerError" class="error-message"></div>
+
+                <button type="submit" class="btn-primary">Crear Cuenta</button>
+            </form>
+
+            <p class="auth-link">
+                ¿Ya tienes cuenta? <a href="#" onclick="showLogin()">Inicia sesión aquí</a>
+            </p>
+
+            <div class="auth-footer">
+                <p>© 2024 Jordan's</p>
+            </div>
+        </div>
+    </div>
+
     <!-- App Container -->
     <div id="app" class="app" style="display: none;">
         
@@ -34,7 +133,7 @@
         <header class="header">
             <button class="menu-btn" onclick="toggleMenu()">☰</button>
             <h1 class="header-title">💰 Mis Finanzas</h1>
-            <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+            <button class="logout-btn" onclick="handleLogout()" title="Cerrar Sesión">🚪</button>
         </header>
 
         <!-- Side Menu -->
@@ -184,7 +283,41 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
+    <!-- Footer -->
+    <footer class="app-footer">
+        <p>© 2024 Jordan's - Todos los derechos reservados</p>
+    </footer>
+
+    <!-- Terms Modal -->
+    <div id="termsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeTerms()">&times;</span>
+            <h2>Términos y Políticas de Jordan's</h2>
+            <div class="terms-content">
+                <h3>1. Aceptación de Términos</h3>
+                <p>Al usar Finanzas App, aceptas estos términos y condiciones.</p>
+                
+                <h3>2. Privacidad de Datos</h3>
+                <p>Tus datos financieros son privados y se almacenan localmente en tu dispositivo.</p>
+                
+                <h3>3. Uso Responsable</h3>
+                <p>Eres responsable de mantener la seguridad de tu cuenta y contraseña.</p>
+                
+                <h3>4. Limitación de Responsabilidad</h3>
+                <p>Jordan's no se hace responsable por pérdidas financieras derivadas del uso de la app.</p>
+                
+                <h3>5. Modificaciones</h3>
+                <p>Nos reservamos el derecho de modificar estos términos en cualquier momento.</p>
+                
+                <h3>6. Contacto</h3>
+                <p>Para consultas: contacto@jordans.com</p>
+            </div>
+            <button onclick="closeTerms()" class="btn-primary">Entendido</button>
+        </div>
+    </div>
+
     <!-- Scripts -->
+    <script src="auth.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
