@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1f36">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Finanzas">
+    
+    <title>💰 Finanzas App</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Cargando...</p>
+    </div>
+
+    <!-- App Container -->
+    <div id="app" class="app" style="display: none;">
+        
+        <!-- Header -->
+        <header class="header">
+            <button class="menu-btn" onclick="toggleMenu()">☰</button>
+            <h1 class="header-title">💰 Mis Finanzas</h1>
+            <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+        </header>
+
+        <!-- Side Menu -->
+        <div id="sideMenu" class="side-menu">
+            <div class="menu-header">
+                <h2>💰 Menú</h2>
+                <button class="close-menu" onclick="toggleMenu()">✕</button>
+            </div>
+            <nav class="menu-nav">
+                <button onclick="showScreen('home')">🏠 Inicio</button>
+                <button onclick="showScreen('add')">➕ Agregar Transacción</button>
+                <button onclick="showScreen('budget')">💰 Presupuestos</button>
+                <button onclick="showScreen('stats')">📊 Estadísticas</button>
+                <button onclick="syncWithSheets()">☁️ Sincronizar</button>
+                <button onclick="exportData()">📥 Exportar Datos</button>
+                <button onclick="clearData()">🗑️ Limpiar Datos</button>
+            </nav>
+        </div>
+
+        <!-- Overlay -->
+        <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
+
+        <!-- Home Screen -->
+        <div id="homeScreen" class="screen active">
+            <div class="summary-cards">
+                <div class="card card-green">
+                    <div class="card-icon">💵</div>
+                    <div class="card-content">
+                        <p class="card-label">Ingresos</p>
+                        <p class="card-value" id="totalIngresos">S/. 0.00</p>
+                    </div>
+                </div>
+
+                <div class="card card-red">
+                    <div class="card-icon">💸</div>
+                    <div class="card-content">
+                        <p class="card-label">Gastos</p>
+                        <p class="card-value" id="totalGastos">S/. 0.00</p>
+                    </div>
+                </div>
+
+                <div class="card card-blue">
+                    <div class="card-icon">💰</div>
+                    <div class="card-content">
+                        <p class="card-label">Balance</p>
+                        <p class="card-value" id="balance">S/. 0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Transacciones Recientes</h2>
+                <div id="transactionsList" class="transactions-list">
+                    <!-- Transactions will be inserted here -->
+                </div>
+            </div>
+
+            <button class="fab" onclick="showScreen('add')">
+                ➕
+            </button>
+        </div>
+
+        <!-- Add Transaction Screen -->
+        <div id="addScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="showScreen('home')">← Volver</button>
+                <h2>Nueva Transacción</h2>
+            </div>
+
+            <div class="form-container">
+                <div class="type-selector">
+                    <button class="type-btn active" data-type="Gasto" onclick="selectType('Gasto')">
+                        💸 Gasto
+                    </button>
+                    <button class="type-btn" data-type="Ingreso" onclick="selectType('Ingreso')">
+                        💵 Ingreso
+                    </button>
+                </div>
+
+                <form id="transactionForm" onsubmit="saveTransaction(event)">
+                    <div class="form-group">
+                        <label>Monto (S/.)</label>
+                        <input type="number" id="monto" step="0.01" required placeholder="0.00">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select id="categoria" required>
+                            <option value="">Selecciona una categoría</option>
+                            <option value="Alimentación">🍔 Alimentación</option>
+                            <option value="Transporte">🚗 Transporte</option>
+                            <option value="Vivienda">🏠 Vivienda</option>
+                            <option value="Servicios">💡 Servicios</option>
+                            <option value="Entretenimiento">🎮 Entretenimiento</option>
+                            <option value="Salud">💊 Salud</option>
+                            <option value="Educación">📚 Educación</option>
+                            <option value="Otros">📦 Otros</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <input type="text" id="descripcion" placeholder="Ej: Almuerzo en restaurante">
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        💾 Guardar Transacción
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Budget Screen -->
+        <div id="budgetScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="showScreen('home')">← Volver</button>
+                <h2>Presupuestos</h2>
+            </div>
+
+            <div id="budgetList" class="budget-list">
+                <!-- Budget items will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Stats Screen -->
+        <div id="statsScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="showScreen('home')">← Volver</button>
+                <h2>Estadísticas</h2>
+            </div>
+
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Gastos por Categoría</h3>
+                    <div id="categoryStats"></div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Últimos 7 días</h3>
+                    <div id="weekStats"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
