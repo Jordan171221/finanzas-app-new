@@ -26,24 +26,43 @@ document.addEventListener('DOMContentLoaded', () => {
     checkInstallPrompt();
 });
 
-// Cargar datos del localStorage
+// Cargar datos del localStorage (por usuario)
 function loadData() {
-    const savedTransactions = localStorage.getItem('transactions');
-    const savedBudgets = localStorage.getItem('budgets');
+    if (!currentUser) return;
+    
+    const userKey = `user_${currentUser.username}`;
+    const savedTransactions = localStorage.getItem(`${userKey}_transactions`);
+    const savedBudgets = localStorage.getItem(`${userKey}_budgets`);
     
     if (savedTransactions) {
         transactions = JSON.parse(savedTransactions);
+    } else {
+        transactions = [];
     }
     
     if (savedBudgets) {
         budgets = JSON.parse(savedBudgets);
+    } else {
+        budgets = {
+            'Alimentación': 600,
+            'Transporte': 200,
+            'Vivienda': 800,
+            'Servicios': 250,
+            'Entretenimiento': 300,
+            'Salud': 150,
+            'Educación': 200,
+            'Otros': 100
+        };
     }
 }
 
-// Guardar datos en localStorage
+// Guardar datos en localStorage (por usuario)
 function saveData() {
-    localStorage.setItem('transactions', JSON.stringify(transactions));
-    localStorage.setItem('budgets', JSON.stringify(budgets));
+    if (!currentUser) return;
+    
+    const userKey = `user_${currentUser.username}`;
+    localStorage.setItem(`${userKey}_transactions`, JSON.stringify(transactions));
+    localStorage.setItem(`${userKey}_budgets`, JSON.stringify(budgets));
 }
 
 // Ocultar loading
