@@ -1,11 +1,11 @@
 // Service Worker para PWA
 const CACHE_NAME = 'finanzas-v1.0.1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/app.js',
-  '/manifest.json'
+  './',
+  './index.html',
+  './styles.css',
+  './app.js',
+  './manifest.json'
 ];
 
 // Instalar Service Worker
@@ -61,3 +61,4 @@ self.addEventListener('fetch', event => {
       })
   );
 });
+
