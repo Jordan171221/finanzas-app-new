@@ -133,7 +133,10 @@
         <header class="header">
             <button class="menu-btn" onclick="toggleMenu()">☰</button>
             <h1 class="header-title">💰 Mis Finanzas</h1>
-            <button class="logout-btn" onclick="handleLogout()" title="Cerrar Sesión">🚪</button>
+            <div class="header-actions">
+                <button class="theme-btn" onclick="toggleTheme()" title="Cambiar Tema">🌙</button>
+                <button class="logout-btn" onclick="handleLogout()" title="Cerrar Sesión">🚪</button>
+            </div>
         </header>
 
         <!-- Side Menu -->
@@ -147,7 +150,7 @@
                 <button onclick="showScreen('add')">➕ Agregar Transacción</button>
                 <button onclick="showScreen('budget')">💰 Presupuestos</button>
                 <button onclick="showScreen('stats')">📊 Estadísticas</button>
-                <button onclick="syncWithSheets()">☁️ Sincronizar</button>
+                <button onclick="showScreen('googleSheets')">📊 Google Sheets</button>
                 <button onclick="exportData()">📥 Exportar Datos</button>
                 <button onclick="clearData()">🗑️ Limpiar Datos</button>
             </nav>
@@ -278,6 +281,61 @@
             </div>
         </div>
 
+        <!-- Google Sheets Screen -->
+        <div id="googleSheetsScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="showScreen('home')">← Volver</button>
+                <h2>Google Sheets</h2>
+            </div>
+
+            <div class="form-container">
+                <div class="info-card">
+                    <h3>📊 Tu Excel Personal en la Nube</h3>
+                    <p>Conecta tu cuenta de Google para crear y sincronizar tu archivo de finanzas en Google Sheets.</p>
+                </div>
+
+                <div id="googleNotAuthorized" class="google-auth-section">
+                    <div class="auth-status">
+                        <span class="status-icon">🔒</span>
+                        <p>No has autorizado el acceso a Google Sheets</p>
+                    </div>
+                    <button onclick="handleGoogleAuthorization()" class="btn-primary">
+                        🔑 Autorizar Google Sheets
+                    </button>
+                    <p class="help-text">
+                        Al autorizar, podremos crear un archivo Excel en tu Google Drive y sincronizar tus transacciones automáticamente.
+                    </p>
+                </div>
+
+                <div id="googleAuthorized" class="google-auth-section" style="display: none;">
+                    <div class="auth-status success">
+                        <span class="status-icon">✅</span>
+                        <p>Google Sheets conectado</p>
+                    </div>
+
+                    <div class="google-actions">
+                        <button onclick="handleSyncToSheets()" class="btn-primary">
+                            ☁️ Sincronizar a Google Sheets
+                        </button>
+                        <button onclick="handleImportFromSheets()" class="btn-secondary">
+                            📥 Importar desde Google Sheets
+                        </button>
+                        <button onclick="openUserSpreadsheet()" class="btn-secondary">
+                            📊 Abrir mi Excel
+                        </button>
+                        <button onclick="handleRevokeGoogle()" class="btn-danger">
+                            🔓 Revocar Acceso
+                        </button>
+                    </div>
+
+                    <div class="info-card">
+                        <h4>ℹ️ Información</h4>
+                        <p id="spreadsheetInfo">Cargando información...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Toast Notification -->
@@ -316,6 +374,10 @@
         </div>
     </div>
 
+    <!-- Google API Scripts -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+    
     <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -324,6 +386,7 @@
     <!-- App Scripts -->
     <script src="firebase-config.js"></script>
     <script src="firebase-auth.js"></script>
+    <script src="google-sheets.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
