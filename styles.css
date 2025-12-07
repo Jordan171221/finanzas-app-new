@@ -1,5 +1,6 @@
-/* Variables */
-:root {
+/* Variables - Tema Claro (por defecto) */
+:root,
+[data-theme="light"] {
     --bg-main: #f5f7fa;
     --bg-card: #ffffff;
     --bg-header: #1a1f36;
@@ -13,12 +14,19 @@
     --shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
+/* Tema Oscuro */
 [data-theme="dark"] {
     --bg-main: #0d1117;
     --bg-card: #161b22;
+    --bg-header: #1a1f36;
     --text-primary: #ffffff;
     --text-secondary: #8b949e;
     --border-color: #30363d;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-blue: #3b82f6;
+    --accent-orange: #f59e0b;
+    --shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 /* Reset */
@@ -93,7 +101,13 @@ body {
     box-shadow: var(--shadow);
 }
 
-.menu-btn, .theme-btn {
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.menu-btn, .theme-btn, .logout-btn {
     background: none;
     border: none;
     color: white;
@@ -101,16 +115,24 @@ body {
     cursor: pointer;
     padding: 8px;
     border-radius: 8px;
-    transition: background 0.3s;
+    transition: all 0.3s ease;
 }
 
-.menu-btn:active, .theme-btn:active {
-    background: rgba(255,255,255,0.1);
+.menu-btn:hover, .theme-btn:hover, .logout-btn:hover {
+    background: rgba(255,255,255,0.15);
+    transform: scale(1.1);
+}
+
+.menu-btn:active, .theme-btn:active, .logout-btn:active {
+    background: rgba(255,255,255,0.2);
+    transform: scale(0.95);
 }
 
 .header-title {
     font-size: 20px;
     font-weight: 600;
+    flex: 1;
+    text-align: center;
 }
 
 /* Side Menu */
@@ -815,4 +837,111 @@ body {
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
+}
+
+/* ========================================
+   GOOGLE SHEETS STYLES
+   ======================================== */
+
+.google-auth-section {
+    padding: 20px;
+}
+
+.auth-status {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.auth-status.success {
+    background: linear-gradient(135deg, #34a853 0%, #0f9d58 100%);
+    color: white;
+}
+
+.status-icon {
+    font-size: 2rem;
+}
+
+.auth-status p {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.google-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-secondary {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 2px solid var(--primary-color);
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+    transform: translateY(-2px);
+}
+
+.help-text {
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    text-align: center;
+}
+
+.info-card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.info-card h3, .info-card h4 {
+    margin: 0 0 10px 0;
+    color: var(--text-primary);
+}
+
+.info-card p {
+    margin: 5px 0;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+#spreadsheetInfo {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
 }
