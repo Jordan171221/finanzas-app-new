@@ -18,26 +18,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Verificar autenticación
 function checkAuth() {
+    console.log('🔍 Verificando autenticación...');
+    console.log('Firebase inicializado:', firebaseInitialized);
+    
     if (firebaseInitialized && auth) {
         // Usar Firebase Authentication
-        auth.onAuthStateChanged((user) => {
+        console.log('✅ Usando Firebase Authentication');
+        auth.onAuthStateChanged(async (user) => {
+            console.log('👤 Estado de autenticación cambió:', user ? 'Autenticado' : 'No autenticado');
             if (user) {
                 // Usuario autenticado con Firebase
-                loadUserData(user.uid).then(() => {
-                    showApp();
-                });
+                console.log('📥 Cargando datos del usuario:', user.uid);
+                await loadUserData(user.uid);
+                console.log('✅ Datos cargados, mostrando app');
+                showApp();
             } else {
                 // No hay usuario autenticado
+                console.log('❌ No hay usuario, mostrando login');
                 showLogin();
             }
         });
     } else {
         // Modo offline - usar localStorage
+        console.log('⚠️ Modo offline - usando localStorage');
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
+            console.log('✅ Usuario encontrado en localStorage');
             showApp();
         } else {
+            console.log('❌ No hay usuario en localStorage');
             showLogin();
         }
     }
@@ -45,16 +55,62 @@ function checkAuth() {
 
 // Cargar datos del usuario desde Firebase
 async function loadUserData(uid) {
-    if (!firebaseInitialized) return;
+    if (!firebaseInitialized) {
+        // Si Firebase no está inicializado, usar localStorage
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+            console.log('✅ Usuario cargado desde localStorage');
+        }
+        return;
+    }
     
     try {
         const userDoc = await db.collection('users').doc(uid).get();
         if (userDoc.exists) {
             currentUser = userDoc.data();
             currentUser.uid = uid;
+            // Guardar en localStorage como backup
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            console.log('✅ Usuario cargado desde Firebase');
+        } else {
+            // Si no existe en Firestore, intentar desde localStorage
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                console.log('✅ Usuario cargado desde localStorage (no existe en Firestore)');
+            } else {
+                // Crear datos básicos del usuario
+                currentUser = {
+                    uid: uid,
+                    email: auth.currentUser.email,
+                    nombres: 'Usuario',
+                    apellidos: '',
+                    username: auth.currentUser.email.split('@')[0]
+                };
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                console.log('✅ Usuario creado con datos básicos');
+            }
         }
     } catch (error) {
         console.error('Error al cargar usuario:', error);
+        // Intentar cargar desde localStorage
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+            console.log('✅ Usuario cargado desde localStorage (error en Firestore)');
+        } else {
+            // Crear datos básicos del usuario
+            currentUser = {
+                uid: uid,
+                email: auth.currentUser ? auth.currentUser.email : '',
+                nombres: 'Usuario',
+                apellidos: '',
+                username: 'usuario'
+            };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            console.log('✅ Usuario creado con datos básicos (fallback)');
+        }
     }
 }
 
@@ -75,13 +131,19 @@ function showRegister() {
 
 // Mostrar app
 function showApp() {
+    console.log('🚀 Mostrando app...');
     hideLoading();
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('registerScreen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     
+    console.log('✅ App visible');
+    
     if (typeof initApp === 'function') {
+        console.log('🔄 Inicializando app...');
         initApp();
+    } else {
+        console.warn('⚠️ initApp no está definida');
     }
 }
 
@@ -205,16 +267,33 @@ async function handleRegister(event) {
             const user = userCredential.user;
             
             // Guardar datos adicionales en Firestore
-            await db.collection('users').doc(user.uid).set({
-                username: username,
-                nombres: nombres,
-                apellidos: apellidos,
-                fechaNac: fechaNac,
-                email: email,
-                createdAt: new Date().toISOString(),
-                blocked: false,
-                loginAttempts: 0
-            });
+            try {
+                await db.collection('users').doc(user.uid).set({
+                    username: username,
+                    nombres: nombres,
+                    apellidos: apellidos,
+                    fechaNac: fechaNac,
+                    email: email,
+                    createdAt: new Date().toISOString(),
+                    blocked: false,
+                    loginAttempts: 0
+                });
+            } catch (firestoreError) {
+                console.error('Error en Firestore, usando localStorage:', firestoreError);
+                // Guardar en localStorage como fallback
+                const userData = {
+                    uid: user.uid,
+                    username: username,
+                    nombres: nombres,
+                    apellidos: apellidos,
+                    fechaNac: fechaNac,
+                    email: email,
+                    createdAt: new Date().toISOString(),
+                    blocked: false,
+                    loginAttempts: 0
+                };
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+            }
             
             showToast('✅ Usuario creado correctamente');
             
@@ -282,6 +361,22 @@ async function handleLogin(event) {
                 .get();
             
             if (usersSnapshot.empty) {
+                // Intentar con localStorage como fallback
+                const savedUser = localStorage.getItem('currentUser');
+                if (savedUser) {
+                    const user = JSON.parse(savedUser);
+                    if (user.username === username) {
+                        // Intentar login con el email guardado
+                        try {
+                            await auth.signInWithEmailAndPassword(user.email, password);
+                            showToast(`¡Bienvenido ${user.nombres}!`);
+                            return;
+                        } catch (error) {
+                            showError(errorEl, 'Contraseña incorrecta');
+                            return;
+                        }
+                    }
+                }
                 showError(errorEl, 'Usuario no encontrado');
                 return;
             }
@@ -300,26 +395,32 @@ async function handleLogin(event) {
                 // showApp se llamará automáticamente por onAuthStateChanged
             } catch (error) {
                 // Incrementar intentos fallidos
-                const userDoc = usersSnapshot.docs[0];
-                const attempts = (userData.loginAttempts || 0) + 1;
-                
-                if (attempts >= 3) {
-                    await db.collection('users').doc(userDoc.id).update({
-                        blocked: true,
-                        loginAttempts: attempts
-                    });
-                    showError(errorEl, 'Usuario bloqueado por múltiples intentos fallidos');
-                } else {
-                    await db.collection('users').doc(userDoc.id).update({
-                        loginAttempts: attempts
-                    });
-                    const remaining = 3 - attempts;
-                    showError(errorEl, `Contraseña incorrecta. Te quedan ${remaining} intentos`);
+                try {
+                    const userDoc = usersSnapshot.docs[0];
+                    const attempts = (userData.loginAttempts || 0) + 1;
+                    
+                    if (attempts >= 3) {
+                        await db.collection('users').doc(userDoc.id).update({
+                            blocked: true,
+                            loginAttempts: attempts
+                        });
+                        showError(errorEl, 'Usuario bloqueado por múltiples intentos fallidos');
+                    } else {
+                        await db.collection('users').doc(userDoc.id).update({
+                            loginAttempts: attempts
+                        });
+                        const remaining = 3 - attempts;
+                        showError(errorEl, `Contraseña incorrecta. Te quedan ${remaining} intentos`);
+                    }
+                } catch (updateError) {
+                    console.error('Error al actualizar intentos:', updateError);
+                    showError(errorEl, 'Contraseña incorrecta');
                 }
             }
             
         } catch (error) {
-            showError(errorEl, 'Error al iniciar sesión: ' + error.message);
+            console.error('Error en login:', error);
+            showError(errorEl, 'Error al iniciar sesión. Verifica tu conexión.');
         }
         
     } else {
