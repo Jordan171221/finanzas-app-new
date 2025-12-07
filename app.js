@@ -78,23 +78,35 @@ function toggleMenu() {
 // Toggle theme
 function toggleTheme() {
     const html = document.documentElement;
-    const currentTheme = html.getAttribute('data-theme');
+    const currentTheme = html.getAttribute('data-theme') || 'dark';
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     
     html.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
     
     const btn = document.querySelector('.theme-btn');
-    btn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    if (btn) {
+        btn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    }
+    
+    showToast(newTheme === 'dark' ? '🌙 Tema oscuro activado' : '☀️ Tema claro activado');
 }
 
-// Cargar tema guardado
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme) {
+// Cargar tema guardado al iniciar
+function loadSavedTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
+    
     const btn = document.querySelector('.theme-btn');
-    if (btn) btn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    if (btn) {
+        btn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    }
 }
+
+// Cargar tema cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    loadSavedTheme();
+});
 
 // Mostrar pantalla
 function showScreen(screenName) {
@@ -330,62 +342,25 @@ function updateBudgetScreen() {
 
 // Actualizar pantalla de estadísticas
 function updateStatsScreen() {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    
-    // Gastos por categoría
-    const gastosPorCategoria = {};
-    
-    transactions.forEach(t => {
-        const tDate = new Date(t.fecha);
-        if (t.tipo === 'Gasto' && 
-            tDate.getMonth() === currentMonth && 
-            tDate.getFullYear() === currentYear) {
-            gastosPorCategoria[t.categoria] = (gastosPorCategoria[t.categoria] || 0) + t.monto;
-        }
-    });
-    
     const categoryStats = document.getElementById('categoryStats');
-    const sortedCategories = Object.entries(gastosPorCategoria)
-        .sort((a, b) => b[1] - a[1]);
-    
-    if (sortedCategories.length === 0) {
-        categoryStats.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No hay gastos este mes</p>';
-    } else {
-        categoryStats.innerHTML = sortedCategories.map(([cat, amount]) => `
-            <div class="stat-item">
-                <span class="stat-label">${cat}</span>
-                <span class="stat-value">S/. ${amount.toFixed(2)}</span>
-            </div>
-        `).join('');
-    }
-    
-    // Últimos 7 días
-    const last7Days = [];
-    for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        last7Days.push(date);
-    }
-    
     const weekStats = document.getElementById('weekStats');
-    weekStats.innerHTML = last7Days.map(date => {
-        const dayTransactions = transactions.filter(t => {
-            const tDate = new Date(t.fecha);
-            return tDate.toDateString() === date.toDateString() && t.tipo === 'Gasto';
-        });
-        
-        const total = dayTransactions.reduce((sum, t) => sum + t.monto, 0);
-        const dateStr = date.toLocaleDateString('es-PE', { weekday: 'short', day: 'numeric', month: 'short' });
-        
-        return `
-            <div class="stat-item">
-                <span class="stat-label">${dateStr}</span>
-                <span class="stat-value">S/. ${total.toFixed(2)}</span>
-            </div>
-        `;
-    }).join('');
+    
+    // Mostrar mensaje vacío para que el usuario llene a su gusto
+    categoryStats.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+            <p style="font-size: 48px; margin-bottom: 10px;">📊</p>
+            <p style="font-size: 16px; margin-bottom: 10px;">Estadísticas Personalizables</p>
+            <p style="font-size: 14px;">Esta sección está lista para que agregues tus propias estadísticas y gráficos</p>
+        </div>
+    `;
+    
+    weekStats.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+            <p style="font-size: 48px; margin-bottom: 10px;">📈</p>
+            <p style="font-size: 16px; margin-bottom: 10px;">Análisis Temporal</p>
+            <p style="font-size: 14px;">Espacio disponible para gráficos de tendencias</p>
+        </div>
+    `;
 }
 
 // Mostrar toast
@@ -432,12 +407,26 @@ function exportData() {
 
 // Limpiar datos
 function clearData() {
-    if (confirm('¿Estás seguro de que quieres eliminar todos los datos?')) {
-        transactions = [];
-        saveData();
-        updateUI();
-        showToast('🗑️ Datos eliminados');
-        showScreen('home');
+    if (confirm('⚠️ ¿Estás seguro de que quieres eliminar TODAS las transacciones?\n\nEsta acción no se puede deshacer.')) {
+        if (confirm('🔴 ÚLTIMA CONFIRMACIÓN: Se eliminarán todos tus datos. ¿Continuar?')) {
+            // Limpiar transacciones
+            transactions = [];
+            
+            // Guardar cambios
+            saveData();
+            
+            // Actualizar interfaz
+            updateUI();
+            updateHomeScreen();
+            
+            // Mostrar mensaje de confirmación
+            showToast('✅ Todos los datos han sido eliminados');
+            
+            // Volver al inicio
+            showScreen('home');
+            
+            console.log('🗑️ Datos eliminados correctamente');
+        }
     }
 }
 
@@ -461,4 +450,89 @@ function checkInstallPrompt() {
         // Mostrar botón de instalación personalizado
         showToast('💡 Puedes instalar esta app en tu celular');
     });
+}
+
+
+// ========================================
+// FUNCIONES DE GOOGLE SHEETS
+// ========================================
+
+// Inicializar Google API cuando la app carga
+window.addEventListener('load', () => {
+    if (typeof initGoogleAPI === 'function') {
+        initGoogleAPI();
+    }
+});
+
+// Manejar autorización de Google
+async function handleGoogleAuthorization() {
+    try {
+        showToast('🔑 Solicitando autorización...');
+        await authorizeGoogleSheets();
+        updateGoogleSheetsUI();
+        showToast('✅ Autorización exitosa');
+    } catch (error) {
+        console.error('Error en autorización:', error);
+        showToast('❌ Error al autorizar');
+    }
+}
+
+// Manejar sincronización a Google Sheets
+async function handleSyncToSheets() {
+    const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+    
+    if (transactions.length === 0) {
+        showToast('⚠️ No hay transacciones para sincronizar');
+        return;
+    }
+    
+    const success = await syncToGoogleSheets(transactions);
+    if (success) {
+        updateGoogleSheetsUI();
+    }
+}
+
+// Manejar importación desde Google Sheets
+async function handleImportFromSheets() {
+    if (confirm('¿Deseas importar datos desde Google Sheets? Esto sobrescribirá tus datos locales.')) {
+        const success = await importFromGoogleSheets();
+        if (success) {
+            updateGoogleSheetsUI();
+        }
+    }
+}
+
+// Manejar revocación de acceso
+function handleRevokeGoogle() {
+    if (confirm('¿Estás seguro de que quieres revocar el acceso a Google Sheets?')) {
+        revokeGoogleAccess();
+        updateGoogleSheetsUI();
+    }
+}
+
+// Actualizar UI de Google Sheets
+function updateGoogleSheetsUI() {
+    const isAuthorized = gapi && gapi.client && gapi.client.getToken() !== null;
+    
+    document.getElementById('googleNotAuthorized').style.display = isAuthorized ? 'none' : 'block';
+    document.getElementById('googleAuthorized').style.display = isAuthorized ? 'block' : 'none';
+    
+    if (isAuthorized && currentUser) {
+        const infoEl = document.getElementById('spreadsheetInfo');
+        if (currentUser.spreadsheetUrl) {
+            infoEl.innerHTML = `
+                <strong>📄 Archivo:</strong> Finanzas Personales - ${currentUser.nombres}<br>
+                <strong>🔗 URL:</strong> <a href="${currentUser.spreadsheetUrl}" target="_blank">Abrir en Google Sheets</a><br>
+                <strong>📅 Creado:</strong> ${new Date(currentUser.spreadsheetCreated).toLocaleDateString('es-PE')}
+            `;
+        } else {
+            infoEl.textContent = 'Aún no has creado tu archivo de Google Sheets. Sincroniza para crearlo automáticamente.';
+        }
+    }
+}
+
+// Mostrar pantalla de Google Sheets
+function showGoogleSheetsScreen() {
+    showScreen('googleSheets');
+    updateGoogleSheetsUI();
 }
