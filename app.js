@@ -326,7 +326,14 @@ function updateBudgetScreen() {
             <div class="budget-item">
                 <div class="budget-header">
                     <div class="budget-category">📁 ${categoria}</div>
-                    <div class="budget-status ${status}">${statusText}</div>
+                    <div class="budget-actions">
+                        <button class="budget-edit-btn" onclick="editBudget('${categoria}')" title="Editar presupuesto">✏️</button>
+                        <div class="budget-status ${status}">${statusText}</div>
+                    </div>
+                </div>
+                <div class="budget-amount">
+                    <span class="budget-label">Presupuesto:</span>
+                    <span class="budget-value">S/. ${presupuesto.toFixed(2)}</span>
                 </div>
                 <div class="budget-progress">
                     <div class="budget-progress-bar" style="width: ${Math.min(porcentaje, 100)}%; background: ${color};"></div>
@@ -338,6 +345,26 @@ function updateBudgetScreen() {
             </div>
         `;
     }).join('');
+}
+
+// Editar presupuesto
+function editBudget(categoria) {
+    const currentBudget = budgets[categoria];
+    const newBudget = prompt(`💰 Editar presupuesto de ${categoria}\n\nPresupuesto actual: S/. ${currentBudget.toFixed(2)}\n\nIngresa el nuevo presupuesto:`, currentBudget);
+    
+    if (newBudget !== null && newBudget !== '') {
+        const amount = parseFloat(newBudget);
+        
+        if (isNaN(amount) || amount <= 0) {
+            showToast('❌ Ingresa un monto válido');
+            return;
+        }
+        
+        budgets[categoria] = amount;
+        saveData();
+        updateBudgetScreen();
+        showToast(`✅ Presupuesto de ${categoria} actualizado a S/. ${amount.toFixed(2)}`);
+    }
 }
 
 // Actualizar pantalla de estadísticas
