@@ -498,6 +498,54 @@ body {
     font-weight: 600;
 }
 
+.budget-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.budget-edit-btn {
+    background: var(--accent-blue);
+    border: none;
+    color: white;
+    font-size: 16px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.budget-edit-btn:hover {
+    background: var(--accent-blue);
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.budget-edit-btn:active {
+    transform: scale(0.95);
+}
+
+.budget-amount {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    background: var(--bg-main);
+    border-radius: 8px;
+}
+
+.budget-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.budget-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent-blue);
+}
+
 .budget-status {
     padding: 4px 12px;
     border-radius: 20px;
