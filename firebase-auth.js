@@ -275,11 +275,18 @@ async function handleRegister(event) {
                 }
             }
             
-            showToast('✅ Usuario creado correctamente');
+            // Enviar email de verificación
+            try {
+                await user.sendEmailVerification();
+                showToast('✅ Usuario creado. Revisa tu correo para verificar tu cuenta.');
+            } catch (emailError) {
+                console.log('⚠️ No se pudo enviar email de verificación');
+                showToast('✅ Usuario creado correctamente');
+            }
             
             setTimeout(() => {
                 showLogin();
-            }, 2000);
+            }, 3000);
             
         } catch (error) {
             if (error.code === 'auth/email-already-in-use') {
@@ -364,7 +371,24 @@ async function handleLogin(event) {
         
         // Intentar login con el email
         try {
-            await auth.signInWithEmailAndPassword(userEmail, password);
+            const userCredential = await auth.signInWithEmailAndPassword(userEmail, password);
+            const user = userCredential.user;
+            
+            // Verificar si el email está verificado
+            if (!user.emailVerified) {
+                // Guardar credenciales para la pantalla de verificación
+                pendingVerificationEmail = userEmail;
+                pendingVerificationPassword = password;
+                
+                // Cerrar sesión
+                await auth.signOut();
+                
+                // Mostrar pantalla de verificación
+                showVerificationScreen(userEmail);
+                
+                return;
+            }
+            
             showToast(`¡Bienvenido!`);
             // showApp se llamará automáticamente por onAuthStateChanged
         } catch (error) {
@@ -478,5 +502,90 @@ window.onclick = function(event) {
     const modal = document.getElementById('termsModal');
     if (event.target == modal) {
         closeTerms();
+    }
+}
+
+
+// Variables globales para verificación
+let pendingVerificationEmail = null;
+let pendingVerificationPassword = null;
+
+// Mostrar pantalla de verificación
+function showVerificationScreen(email) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('registerScreen').style.display = 'none';
+    document.getElementById('verificationScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    
+    document.getElementById('verificationEmail').textContent = email;
+    pendingVerificationEmail = email;
+}
+
+// Verificar si el email fue verificado
+async function checkEmailVerification() {
+    if (!pendingVerificationEmail || !pendingVerificationPassword) {
+        showToast('⚠️ Debes iniciar sesión primero');
+        showLogin();
+        return;
+    }
+    
+    try {
+        showToast('🔄 Verificando...');
+        
+        // Iniciar sesión para obtener el estado actualizado
+        const userCredential = await auth.signInWithEmailAndPassword(
+            pendingVerificationEmail, 
+            pendingVerificationPassword
+        );
+        
+        // Recargar el usuario para obtener el estado más reciente
+        await userCredential.user.reload();
+        
+        if (userCredential.user.emailVerified) {
+            showToast('✅ Email verificado correctamente');
+            pendingVerificationEmail = null;
+            pendingVerificationPassword = null;
+            // showApp se llamará automáticamente por onAuthStateChanged
+        } else {
+            await auth.signOut();
+            showToast('⚠️ Aún no has verificado tu correo. Revisa tu bandeja de entrada.');
+        }
+    } catch (error) {
+        console.error('Error al verificar:', error);
+        showToast('❌ Error al verificar. Intenta de nuevo.');
+    }
+}
+
+// Reenviar email de verificación
+async function resendVerificationEmail() {
+    if (!pendingVerificationEmail || !pendingVerificationPassword) {
+        showToast('⚠️ Debes iniciar sesión primero');
+        showLogin();
+        return;
+    }
+    
+    try {
+        showToast('📧 Enviando código...');
+        
+        // Iniciar sesión temporalmente
+        const userCredential = await auth.signInWithEmailAndPassword(
+            pendingVerificationEmail, 
+            pendingVerificationPassword
+        );
+        
+        // Enviar email de verificación
+        await userCredential.user.sendEmailVerification();
+        
+        // Cerrar sesión
+        await auth.signOut();
+        
+        showToast('✅ Código enviado. Revisa tu correo.');
+    } catch (error) {
+        console.error('Error al reenviar:', error);
+        if (error.code === 'auth/too-many-requests') {
+            showToast('⚠️ Demasiados intentos. Espera un momento.');
+        } else {
+            showToast('❌ Error al enviar código');
+        }
     }
 }
