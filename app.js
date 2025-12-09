@@ -365,7 +365,18 @@ function updateBudgetScreen() {
     });
     
     const budgetList = document.getElementById('budgetList');
-    budgetList.innerHTML = Object.keys(budgets).map(categoria => {
+    
+    // Botón para agregar nueva categoría
+    let html = `
+        <div class="budget-add-section">
+            <button class="btn-add-budget" onclick="addNewBudgetCategory()">
+                ➕ Agregar Nueva Categoría
+            </button>
+        </div>
+    `;
+    
+    // Lista de categorías
+    html += Object.keys(budgets).map(categoria => {
         const presupuesto = budgets[categoria];
         const gastado = gastosPorCategoria[categoria] || 0;
         const porcentaje = (gastado / presupuesto) * 100;
@@ -391,6 +402,7 @@ function updateBudgetScreen() {
                     <div class="budget-category">📁 ${categoria}</div>
                     <div class="budget-actions">
                         <button class="budget-edit-btn" onclick="editBudget('${categoria}')" title="Editar presupuesto">✏️</button>
+                        <button class="budget-delete-btn" onclick="deleteBudgetCategory('${categoria}')" title="Eliminar categoría">🗑️</button>
                         <div class="budget-status ${status}">${statusText}</div>
                     </div>
                 </div>
@@ -408,6 +420,8 @@ function updateBudgetScreen() {
             </div>
         `;
     }).join('');
+    
+    budgetList.innerHTML = html;
 }
 
 // Editar presupuesto
@@ -427,6 +441,61 @@ function editBudget(categoria) {
         saveData();
         updateBudgetScreen();
         showToast(`✅ Presupuesto de ${categoria} actualizado a S/. ${amount.toFixed(2)}`);
+    }
+}
+
+// Agregar nueva categoría de presupuesto
+function addNewBudgetCategory() {
+    const categoryName = prompt('📁 Nueva Categoría\n\nIngresa el nombre de la categoría:');
+    
+    if (!categoryName || categoryName.trim() === '') {
+        return;
+    }
+    
+    const cleanName = categoryName.trim();
+    
+    // Verificar si ya existe
+    if (budgets[cleanName]) {
+        showToast('⚠️ Esta categoría ya existe');
+        return;
+    }
+    
+    const amount = prompt(`💰 Presupuesto para ${cleanName}\n\nIngresa el monto del presupuesto:`, '100');
+    
+    if (!amount || amount.trim() === '') {
+        return;
+    }
+    
+    const budget = parseFloat(amount);
+    
+    if (isNaN(budget) || budget <= 0) {
+        showToast('❌ Ingresa un monto válido');
+        return;
+    }
+    
+    // Agregar nueva categoría
+    budgets[cleanName] = budget;
+    saveData();
+    updateBudgetScreen();
+    showToast(`✅ Categoría "${cleanName}" agregada con presupuesto de S/. ${budget.toFixed(2)}`);
+}
+
+// Eliminar categoría de presupuesto
+function deleteBudgetCategory(categoria) {
+    // Verificar si hay transacciones con esta categoría
+    const hasTransactions = transactions.some(t => t.categoria === categoria);
+    
+    let confirmMessage = `🗑️ ¿Eliminar la categoría "${categoria}"?`;
+    
+    if (hasTransactions) {
+        confirmMessage += '\n\n⚠️ ADVERTENCIA: Tienes transacciones con esta categoría. Las transacciones NO se eliminarán, solo el presupuesto.';
+    }
+    
+    if (confirm(confirmMessage)) {
+        delete budgets[categoria];
+        saveData();
+        updateBudgetScreen();
+        showToast(`✅ Categoría "${categoria}" eliminada`);
     }
 }
 
