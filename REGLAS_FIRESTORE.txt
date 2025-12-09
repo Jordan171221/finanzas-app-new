@@ -1,0 +1,47 @@
+═══════════════════════════════════════════════════════════════
+    🔥 REGLAS DE FIRESTORE - ACTUALIZAR EN FIREBASE
+═══════════════════════════════════════════════════════════════
+
+Ve a Firebase Console → Firestore Database → Reglas
+
+Copia y pega estas reglas:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Colección de usuarios
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Colección de mapeo username -> uid
+    match /usernames/{username} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Colección de datos de usuario (transacciones y presupuestos)
+    match /userData/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Colección de transacciones (opcional, si quieres guardarlas separadas)
+    match /transactions/{transactionId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Colección de presupuestos (opcional)
+    match /budgets/{budgetId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+  }
+}
+
+═══════════════════════════════════════════════════════════════
+
+IMPORTANTE: Después de pegar las reglas, haz clic en "Publicar"
+
+═══════════════════════════════════════════════════════════════
