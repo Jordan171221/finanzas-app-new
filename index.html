@@ -18,7 +18,7 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     
     <!-- Styles -->
-    <link rel="stylesheet" href="styles.css?v=2.0">
+    <link rel="stylesheet" href="styles.css?v=3.0">
 </head>
 <body>
     <!-- Loading Screen -->
@@ -53,6 +53,40 @@
             <p class="auth-link">
                 ¿No tienes cuenta? <a href="#" onclick="showRegister()">Regístrate aquí</a>
             </p>
+
+            <div class="auth-footer">
+                <p>© 2024 Jordan's</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Verification Screen -->
+    <div id="verificationScreen" class="auth-screen" style="display: none;">
+        <div class="auth-container">
+            <div class="auth-logo">📧</div>
+            <h1 class="auth-title">Verifica tu Correo</h1>
+            <p class="auth-subtitle">Hemos enviado un código de verificación a tu correo</p>
+
+            <div class="verification-info">
+                <p><strong id="verificationEmail"></strong></p>
+                <p style="margin-top: 10px; font-size: 14px; color: var(--text-secondary);">
+                    Revisa tu bandeja de entrada y haz clic en el enlace de verificación.
+                </p>
+            </div>
+
+            <div class="verification-actions">
+                <button onclick="checkEmailVerification()" class="btn-primary">
+                    ✅ Ya Verifiqué mi Correo
+                </button>
+                
+                <button onclick="resendVerificationEmail()" class="btn-secondary">
+                    📧 Reenviar Código
+                </button>
+                
+                <button onclick="showLogin()" class="btn-link">
+                    ← Volver al Login
+                </button>
+            </div>
 
             <div class="auth-footer">
                 <p>© 2024 Jordan's</p>
@@ -384,9 +418,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
     <!-- App Scripts -->
-    <script src="firebase-config.js?v=2.0"></script>
-    <script src="firebase-auth.js?v=2.0"></script>
-    <script src="google-sheets.js?v=2.0"></script>
-    <script src="app.js?v=2.0"></script>
+    <script src="firebase-config.js?v=3.0"></script>
+    <script src="firebase-auth.js?v=3.0"></script>
+    <script src="google-sheets.js?v=3.0"></script>
+    <script src="app.js?v=3.0"></script>
 </body>
 </html>
