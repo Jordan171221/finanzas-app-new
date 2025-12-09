@@ -20,7 +20,16 @@ let budgets = {
 // Inicializar app (solo si hay usuario autenticado)
 function initApp() {
     loadData();
-    updateUI();
+    
+    // Intentar cargar desde Firebase
+    if (typeof db !== 'undefined' && db && currentUser && currentUser.uid) {
+        loadFromFirebase().then(() => {
+            updateUI();
+        });
+    } else {
+        updateUI();
+    }
+    
     registerServiceWorker();
     checkInstallPrompt();
 }
@@ -55,13 +64,67 @@ function loadData() {
     }
 }
 
-// Guardar datos en localStorage (por usuario)
+// Guardar datos en localStorage y Firebase (por usuario)
 function saveData() {
     if (!currentUser) return;
     
     const userKey = `user_${currentUser.username}`;
+    
+    // Guardar en localStorage (inmediato)
     localStorage.setItem(`${userKey}_transactions`, JSON.stringify(transactions));
     localStorage.setItem(`${userKey}_budgets`, JSON.stringify(budgets));
+    
+    // Guardar en Firebase (si está disponible)
+    if (typeof db !== 'undefined' && db && currentUser.uid) {
+        saveToFirebase();
+    }
+}
+
+// Guardar en Firebase
+async function saveToFirebase() {
+    if (!currentUser || !currentUser.uid) return;
+    
+    try {
+        // Guardar transacciones
+        await db.collection('userData').doc(currentUser.uid).set({
+            transactions: transactions,
+            budgets: budgets,
+            lastUpdate: new Date().toISOString()
+        }, { merge: true });
+        
+        console.log('✅ Datos guardados en Firebase');
+    } catch (error) {
+        console.log('⚠️ No se pudo guardar en Firebase:', error.message);
+    }
+}
+
+// Cargar datos desde Firebase
+async function loadFromFirebase() {
+    if (!currentUser || !currentUser.uid || !db) return;
+    
+    try {
+        const doc = await db.collection('userData').doc(currentUser.uid).get();
+        
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.transactions) {
+                transactions = data.transactions;
+            }
+            if (data.budgets) {
+                budgets = data.budgets;
+            }
+            
+            // Guardar en localStorage también
+            const userKey = `user_${currentUser.username}`;
+            localStorage.setItem(`${userKey}_transactions`, JSON.stringify(transactions));
+            localStorage.setItem(`${userKey}_budgets`, JSON.stringify(budgets));
+            
+            console.log('✅ Datos cargados desde Firebase');
+            updateUI();
+        }
+    } catch (error) {
+        console.log('⚠️ No se pudo cargar desde Firebase:', error.message);
+    }
 }
 
 // Función hideLoading está en auth.js
