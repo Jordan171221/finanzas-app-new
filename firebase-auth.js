@@ -327,82 +327,56 @@ async function handleRegister(event) {
 async function handleLogin(event) {
     event.preventDefault();
     
-    const username = document.getElementById('loginUsername').value.trim();
+    const usernameOrEmail = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
     const errorEl = document.getElementById('loginError');
     
     if (firebaseInitialized && auth) {
-        // Login con Firebase - buscar email
-        let userEmail = null;
+        let userEmail = usernameOrEmail;
         
-        // 1. Buscar en el mapa de usernames (localStorage)
-        const usernameMap = JSON.parse(localStorage.getItem('usernameMap') || '{}');
-        if (usernameMap[username]) {
-            userEmail = usernameMap[username];
-        }
-        
-        // 2. Si no está en localStorage, buscar en Firestore
-        if (!userEmail && db) {
-            try {
-                const usernameDoc = await db.collection('usernames').doc(username).get();
-                
-                if (usernameDoc.exists) {
-                    userEmail = usernameDoc.data().email;
-                    // Guardar en localStorage para próximas veces
-                    usernameMap[username] = userEmail;
-                    localStorage.setItem('usernameMap', JSON.stringify(usernameMap));
-                } else {
-                    // Si no existe en usernames, buscar en users
-                    console.log('⚠️ Buscando usuario en colección users...');
+        // Si no es un email (no contiene @), buscar el email del username
+        if (!usernameOrEmail.includes('@')) {
+            userEmail = null;
+            
+            // Buscar en Firestore directamente
+            if (db) {
+                try {
+                    // Buscar en la colección users por username
                     const usersSnapshot = await db.collection('users')
-                        .where('username', '==', username)
+                        .where('username', '==', usernameOrEmail)
                         .limit(1)
                         .get();
                     
                     if (!usersSnapshot.empty) {
-                        const userData = usersSnapshot.docs[0].data();
-                        userEmail = userData.email;
-                        
-                        // Guardar en localStorage
-                        usernameMap[username] = userEmail;
-                        localStorage.setItem('usernameMap', JSON.stringify(usernameMap));
-                        
-                        // Intentar crear el mapeo en Firestore para próximas veces
-                        try {
-                            await db.collection('usernames').doc(username).set({
-                                uid: userData.uid,
-                                email: userEmail
-                            });
-                            console.log('✅ Mapeo creado en Firestore');
-                        } catch (err) {
-                            console.log('⚠️ No se pudo crear mapeo en Firestore');
-                        }
+                        userEmail = usersSnapshot.docs[0].data().email;
+                        console.log('✅ Usuario encontrado:', userEmail);
                     }
+                } catch (error) {
+                    console.log('⚠️ Error al buscar usuario:', error.message);
                 }
-            } catch (error) {
-                console.log('⚠️ Error al buscar en Firestore:', error.message);
+            }
+            
+            if (!userEmail) {
+                showError(errorEl, 'Usuario no encontrado');
+                return;
             }
         }
         
-        if (!userEmail) {
-            showError(errorEl, 'Usuario no encontrado');
-            return;
-        }
-        
-        // Intentar login
+        // Intentar login con el email
         try {
             await auth.signInWithEmailAndPassword(userEmail, password);
             showToast(`¡Bienvenido!`);
             // showApp se llamará automáticamente por onAuthStateChanged
         } catch (error) {
-            if (error.code === 'auth/wrong-password') {
+            console.error('Error de login:', error);
+            if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
                 showError(errorEl, 'Contraseña incorrecta');
             } else if (error.code === 'auth/user-not-found') {
                 showError(errorEl, 'Usuario no encontrado');
-            } else if (error.code === 'auth/invalid-credential') {
-                showError(errorEl, 'Contraseña incorrecta');
+            } else if (error.code === 'auth/too-many-requests') {
+                showError(errorEl, 'Demasiados intentos. Espera un momento.');
             } else {
-                showError(errorEl, 'Error al iniciar sesión');
+                showError(errorEl, 'Error al iniciar sesión: ' + error.message);
             }
         }
         
