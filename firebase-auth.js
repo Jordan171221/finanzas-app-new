@@ -252,10 +252,23 @@ async function handleRegister(event) {
             };
             localStorage.setItem('currentUser', JSON.stringify(userData));
             
+            // Guardar mapeo username -> email en localStorage para búsqueda rápida
+            const usernameMap = JSON.parse(localStorage.getItem('usernameMap') || '{}');
+            usernameMap[username] = email;
+            localStorage.setItem('usernameMap', JSON.stringify(usernameMap));
+            
             // Intentar guardar en Firestore (opcional)
             if (db) {
                 try {
+                    // Guardar en la colección users con el UID
                     await db.collection('users').doc(user.uid).set(userData);
+                    
+                    // Guardar también en una colección de mapeo username -> uid
+                    await db.collection('usernames').doc(username).set({
+                        uid: user.uid,
+                        email: email
+                    });
+                    
                     console.log('✅ Datos guardados en Firestore');
                 } catch (firestoreError) {
                     console.log('⚠️ No se pudo guardar en Firestore, pero está en localStorage');
@@ -319,27 +332,25 @@ async function handleLogin(event) {
     const errorEl = document.getElementById('loginError');
     
     if (firebaseInitialized && auth) {
-        // Login con Firebase - buscar email en localStorage primero
-        const savedUser = localStorage.getItem('currentUser');
+        // Login con Firebase - buscar email
         let userEmail = null;
         
-        if (savedUser) {
-            const user = JSON.parse(savedUser);
-            if (user.username === username) {
-                userEmail = user.email;
-            }
+        // 1. Buscar en el mapa de usernames (localStorage)
+        const usernameMap = JSON.parse(localStorage.getItem('usernameMap') || '{}');
+        if (usernameMap[username]) {
+            userEmail = usernameMap[username];
         }
         
-        // Si no está en localStorage, buscar en Firestore
+        // 2. Si no está en localStorage, buscar en Firestore
         if (!userEmail && db) {
             try {
-                const usersSnapshot = await db.collection('users')
-                    .where('username', '==', username)
-                    .limit(1)
-                    .get();
+                const usernameDoc = await db.collection('usernames').doc(username).get();
                 
-                if (!usersSnapshot.empty) {
-                    userEmail = usersSnapshot.docs[0].data().email;
+                if (usernameDoc.exists) {
+                    userEmail = usernameDoc.data().email;
+                    // Guardar en localStorage para próximas veces
+                    usernameMap[username] = userEmail;
+                    localStorage.setItem('usernameMap', JSON.stringify(usernameMap));
                 }
             } catch (error) {
                 console.log('⚠️ No se pudo buscar en Firestore');
@@ -361,6 +372,8 @@ async function handleLogin(event) {
                 showError(errorEl, 'Contraseña incorrecta');
             } else if (error.code === 'auth/user-not-found') {
                 showError(errorEl, 'Usuario no encontrado');
+            } else if (error.code === 'auth/invalid-credential') {
+                showError(errorEl, 'Contraseña incorrecta');
             } else {
                 showError(errorEl, 'Error al iniciar sesión');
             }
