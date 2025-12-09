@@ -351,9 +351,36 @@ async function handleLogin(event) {
                     // Guardar en localStorage para próximas veces
                     usernameMap[username] = userEmail;
                     localStorage.setItem('usernameMap', JSON.stringify(usernameMap));
+                } else {
+                    // Si no existe en usernames, buscar en users
+                    console.log('⚠️ Buscando usuario en colección users...');
+                    const usersSnapshot = await db.collection('users')
+                        .where('username', '==', username)
+                        .limit(1)
+                        .get();
+                    
+                    if (!usersSnapshot.empty) {
+                        const userData = usersSnapshot.docs[0].data();
+                        userEmail = userData.email;
+                        
+                        // Guardar en localStorage
+                        usernameMap[username] = userEmail;
+                        localStorage.setItem('usernameMap', JSON.stringify(usernameMap));
+                        
+                        // Intentar crear el mapeo en Firestore para próximas veces
+                        try {
+                            await db.collection('usernames').doc(username).set({
+                                uid: userData.uid,
+                                email: userEmail
+                            });
+                            console.log('✅ Mapeo creado en Firestore');
+                        } catch (err) {
+                            console.log('⚠️ No se pudo crear mapeo en Firestore');
+                        }
+                    }
                 }
             } catch (error) {
-                console.log('⚠️ No se pudo buscar en Firestore');
+                console.log('⚠️ Error al buscar en Firestore:', error.message);
             }
         }
         
