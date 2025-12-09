@@ -19,22 +19,32 @@ document.addEventListener('DOMContentLoaded', () => {
 // Verificar autenticación
 function checkAuth() {
     console.log('🔍 Verificando autenticación...');
-    console.log('Firebase inicializado:', firebaseInitialized);
     
     if (firebaseInitialized && auth) {
         // Usar Firebase Authentication
         console.log('✅ Usando Firebase Authentication');
         auth.onAuthStateChanged(async (user) => {
-            console.log('👤 Estado de autenticación cambió:', user ? 'Autenticado' : 'No autenticado');
             if (user) {
-                // Usuario autenticado con Firebase
-                console.log('📥 Cargando datos del usuario:', user.uid);
-                await loadUserData(user.uid);
-                console.log('✅ Datos cargados, mostrando app');
+                // Usuario autenticado - cargar datos básicos primero
+                currentUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    nombres: user.displayName || 'Usuario',
+                    username: user.email.split('@')[0]
+                };
+                
+                // Guardar en localStorage inmediatamente
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Mostrar app de inmediato
                 showApp();
+                
+                // Cargar datos adicionales en segundo plano
+                loadUserData(user.uid).catch(err => {
+                    console.log('⚠️ No se pudieron cargar datos adicionales, usando básicos');
+                });
             } else {
                 // No hay usuario autenticado
-                console.log('❌ No hay usuario, mostrando login');
                 showLogin();
             }
         });
@@ -44,73 +54,35 @@ function checkAuth() {
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
-            console.log('✅ Usuario encontrado en localStorage');
             showApp();
         } else {
-            console.log('❌ No hay usuario en localStorage');
             showLogin();
         }
     }
 }
 
-// Cargar datos del usuario desde Firebase
+// Cargar datos del usuario desde Firebase (en segundo plano)
 async function loadUserData(uid) {
-    if (!firebaseInitialized) {
-        // Si Firebase no está inicializado, usar localStorage
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-            console.log('✅ Usuario cargado desde localStorage');
-        }
+    if (!firebaseInitialized || !db) {
         return;
     }
     
     try {
         const userDoc = await db.collection('users').doc(uid).get();
         if (userDoc.exists) {
-            currentUser = userDoc.data();
-            currentUser.uid = uid;
-            // Guardar en localStorage como backup
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            console.log('✅ Usuario cargado desde Firebase');
-        } else {
-            // Si no existe en Firestore, intentar desde localStorage
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                console.log('✅ Usuario cargado desde localStorage (no existe en Firestore)');
-            } else {
-                // Crear datos básicos del usuario
-                currentUser = {
-                    uid: uid,
-                    email: auth.currentUser.email,
-                    nombres: 'Usuario',
-                    apellidos: '',
-                    username: auth.currentUser.email.split('@')[0]
-                };
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                console.log('✅ Usuario creado con datos básicos');
-            }
-        }
-    } catch (error) {
-        console.error('Error al cargar usuario:', error);
-        // Intentar cargar desde localStorage
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-            console.log('✅ Usuario cargado desde localStorage (error en Firestore)');
-        } else {
-            // Crear datos básicos del usuario
+            const userData = userDoc.data();
+            // Actualizar solo si hay datos adicionales
             currentUser = {
-                uid: uid,
-                email: auth.currentUser ? auth.currentUser.email : '',
-                nombres: 'Usuario',
-                apellidos: '',
-                username: 'usuario'
+                ...currentUser,
+                ...userData,
+                uid: uid
             };
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            console.log('✅ Usuario creado con datos básicos (fallback)');
+            console.log('✅ Datos adicionales cargados desde Firebase');
         }
+    } catch (error) {
+        console.log('⚠️ No se pudieron cargar datos adicionales:', error.message);
+        // No hacer nada, ya tenemos datos básicos
     }
 }
 
@@ -266,33 +238,28 @@ async function handleRegister(event) {
             const userCredential = await auth.createUserWithEmailAndPassword(email, password);
             const user = userCredential.user;
             
-            // Guardar datos adicionales en Firestore
-            try {
-                await db.collection('users').doc(user.uid).set({
-                    username: username,
-                    nombres: nombres,
-                    apellidos: apellidos,
-                    fechaNac: fechaNac,
-                    email: email,
-                    createdAt: new Date().toISOString(),
-                    blocked: false,
-                    loginAttempts: 0
-                });
-            } catch (firestoreError) {
-                console.error('Error en Firestore, usando localStorage:', firestoreError);
-                // Guardar en localStorage como fallback
-                const userData = {
-                    uid: user.uid,
-                    username: username,
-                    nombres: nombres,
-                    apellidos: apellidos,
-                    fechaNac: fechaNac,
-                    email: email,
-                    createdAt: new Date().toISOString(),
-                    blocked: false,
-                    loginAttempts: 0
-                };
-                localStorage.setItem('currentUser', JSON.stringify(userData));
+            // Guardar datos en localStorage primero
+            const userData = {
+                uid: user.uid,
+                username: username,
+                nombres: nombres,
+                apellidos: apellidos,
+                fechaNac: fechaNac,
+                email: email,
+                createdAt: new Date().toISOString(),
+                blocked: false,
+                loginAttempts: 0
+            };
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            
+            // Intentar guardar en Firestore (opcional)
+            if (db) {
+                try {
+                    await db.collection('users').doc(user.uid).set(userData);
+                    console.log('✅ Datos guardados en Firestore');
+                } catch (firestoreError) {
+                    console.log('⚠️ No se pudo guardar en Firestore, pero está en localStorage');
+                }
             }
             
             showToast('✅ Usuario creado correctamente');
@@ -352,75 +319,51 @@ async function handleLogin(event) {
     const errorEl = document.getElementById('loginError');
     
     if (firebaseInitialized && auth) {
-        // Login con Firebase
-        // Primero necesitamos obtener el email del username
-        try {
-            const usersSnapshot = await db.collection('users')
-                .where('username', '==', username)
-                .limit(1)
-                .get();
-            
-            if (usersSnapshot.empty) {
-                // Intentar con localStorage como fallback
-                const savedUser = localStorage.getItem('currentUser');
-                if (savedUser) {
-                    const user = JSON.parse(savedUser);
-                    if (user.username === username) {
-                        // Intentar login con el email guardado
-                        try {
-                            await auth.signInWithEmailAndPassword(user.email, password);
-                            showToast(`¡Bienvenido ${user.nombres}!`);
-                            return;
-                        } catch (error) {
-                            showError(errorEl, 'Contraseña incorrecta');
-                            return;
-                        }
-                    }
-                }
-                showError(errorEl, 'Usuario no encontrado');
-                return;
+        // Login con Firebase - buscar email en localStorage primero
+        const savedUser = localStorage.getItem('currentUser');
+        let userEmail = null;
+        
+        if (savedUser) {
+            const user = JSON.parse(savedUser);
+            if (user.username === username) {
+                userEmail = user.email;
             }
-            
-            const userData = usersSnapshot.docs[0].data();
-            
-            if (userData.blocked) {
-                showError(errorEl, 'Usuario bloqueado. Contacta al administrador.');
-                return;
-            }
-            
-            // Intentar login con email y contraseña
+        }
+        
+        // Si no está en localStorage, buscar en Firestore
+        if (!userEmail && db) {
             try {
-                await auth.signInWithEmailAndPassword(userData.email, password);
-                showToast(`¡Bienvenido ${userData.nombres}!`);
-                // showApp se llamará automáticamente por onAuthStateChanged
-            } catch (error) {
-                // Incrementar intentos fallidos
-                try {
-                    const userDoc = usersSnapshot.docs[0];
-                    const attempts = (userData.loginAttempts || 0) + 1;
-                    
-                    if (attempts >= 3) {
-                        await db.collection('users').doc(userDoc.id).update({
-                            blocked: true,
-                            loginAttempts: attempts
-                        });
-                        showError(errorEl, 'Usuario bloqueado por múltiples intentos fallidos');
-                    } else {
-                        await db.collection('users').doc(userDoc.id).update({
-                            loginAttempts: attempts
-                        });
-                        const remaining = 3 - attempts;
-                        showError(errorEl, `Contraseña incorrecta. Te quedan ${remaining} intentos`);
-                    }
-                } catch (updateError) {
-                    console.error('Error al actualizar intentos:', updateError);
-                    showError(errorEl, 'Contraseña incorrecta');
+                const usersSnapshot = await db.collection('users')
+                    .where('username', '==', username)
+                    .limit(1)
+                    .get();
+                
+                if (!usersSnapshot.empty) {
+                    userEmail = usersSnapshot.docs[0].data().email;
                 }
+            } catch (error) {
+                console.log('⚠️ No se pudo buscar en Firestore');
             }
-            
+        }
+        
+        if (!userEmail) {
+            showError(errorEl, 'Usuario no encontrado');
+            return;
+        }
+        
+        // Intentar login
+        try {
+            await auth.signInWithEmailAndPassword(userEmail, password);
+            showToast(`¡Bienvenido!`);
+            // showApp se llamará automáticamente por onAuthStateChanged
         } catch (error) {
-            console.error('Error en login:', error);
-            showError(errorEl, 'Error al iniciar sesión. Verifica tu conexión.');
+            if (error.code === 'auth/wrong-password') {
+                showError(errorEl, 'Contraseña incorrecta');
+            } else if (error.code === 'auth/user-not-found') {
+                showError(errorEl, 'Usuario no encontrado');
+            } else {
+                showError(errorEl, 'Error al iniciar sesión');
+            }
         }
         
     } else {
