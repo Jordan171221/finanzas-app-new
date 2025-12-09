@@ -525,6 +525,54 @@ body {
     transform: scale(0.95);
 }
 
+.budget-delete-btn {
+    background: var(--accent-red);
+    border: none;
+    color: white;
+    font-size: 16px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.budget-delete-btn:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.budget-delete-btn:active {
+    transform: scale(0.95);
+}
+
+.budget-add-section {
+    margin-bottom: 20px;
+}
+
+.btn-add-budget {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent-green) 0%, #059669 100%);
+    color: white;
+    border: none;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-add-budget:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+}
+
+.btn-add-budget:active {
+    transform: translateY(0);
+}
+
 .budget-amount {
     display: flex;
     justify-content: space-between;
