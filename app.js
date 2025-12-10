@@ -194,6 +194,8 @@ function showScreen(screenName) {
         updateBudgetScreen();
     } else if (screenName === 'stats') {
         updateStatsScreen();
+    } else if (screenName === 'allTransactions') {
+        updateAllTransactionsScreen();
     }
 }
 
@@ -357,6 +359,7 @@ function updateHomeScreen() {
     
     // Actualizar lista de transacciones
     const transactionsList = document.getElementById('transactionsList');
+    const verMasBtn = document.getElementById('verMasBtn');
     
     if (transactions.length === 0) {
         transactionsList.innerHTML = `
@@ -366,8 +369,9 @@ function updateHomeScreen() {
                 <p style="font-size: 14px; margin-top: 10px;">Toca el botón ➕ para agregar una</p>
             </div>
         `;
+        verMasBtn.style.display = 'none';
     } else {
-        const recentTransactions = transactions.slice(0, 10);
+        const recentTransactions = transactions.slice(0, 5);
         transactionsList.innerHTML = recentTransactions.map(t => {
             const date = new Date(t.fecha);
             const dateStr = date.toLocaleDateString('es-PE', { 
@@ -379,12 +383,13 @@ function updateHomeScreen() {
             
             const icon = t.tipo === 'Ingreso' ? '💵' : '💸';
             const amountClass = t.tipo === 'Ingreso' ? 'ingreso' : 'gasto';
+            const hasImage = t.comprobante ? '📎' : '';
             
             return `
-                <div class="transaction-item">
+                <div class="transaction-item" onclick="editTransaction(${t.id})">
                     <div class="transaction-icon">${icon}</div>
                     <div class="transaction-content">
-                        <div class="transaction-desc">${t.descripcion}</div>
+                        <div class="transaction-desc">${t.descripcion} ${hasImage}</div>
                         <div class="transaction-meta">${t.categoria} • ${dateStr}</div>
                     </div>
                     <div class="transaction-amount ${amountClass}">
@@ -393,6 +398,9 @@ function updateHomeScreen() {
                 </div>
             `;
         }).join('');
+        
+        // Mostrar botón "Ver más" solo si hay más de 5 transacciones
+        verMasBtn.style.display = transactions.length > 5 ? 'block' : 'none';
     }
 }
 
@@ -659,4 +667,239 @@ function checkInstallPrompt() {
         // Mostrar botón de instalación personalizado
         showToast('💡 Puedes instalar esta app en tu celular');
     });
+}
+
+
+// Mostrar todas las transacciones
+function showAllTransactions() {
+    showScreen('allTransactions');
+}
+
+// Actualizar pantalla de todas las transacciones
+function updateAllTransactionsScreen() {
+    const allTransactionsList = document.getElementById('allTransactionsList');
+    
+    if (transactions.length === 0) {
+        allTransactionsList.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                <p style="font-size: 48px; margin-bottom: 10px;">📝</p>
+                <p>No hay transacciones aún</p>
+                <p style="font-size: 14px; margin-top: 10px;">Toca el botón ➕ para agregar una</p>
+            </div>
+        `;
+        return;
+    }
+    
+    allTransactionsList.innerHTML = transactions.map(t => {
+        const date = new Date(t.fecha);
+        const dateStr = date.toLocaleDateString('es-PE', { 
+            day: '2-digit', 
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        const icon = t.tipo === 'Ingreso' ? '💵' : '💸';
+        const amountClass = t.tipo === 'Ingreso' ? 'ingreso' : 'gasto';
+        const hasImage = t.comprobante ? '📎' : '';
+        
+        return `
+            <div class="transaction-item" onclick="editTransaction(${t.id})">
+                <div class="transaction-icon">${icon}</div>
+                <div class="transaction-content">
+                    <div class="transaction-desc">${t.descripcion} ${hasImage}</div>
+                    <div class="transaction-meta">${t.categoria} • ${dateStr}</div>
+                </div>
+                <div class="transaction-amount ${amountClass}">
+                    S/. ${t.monto.toFixed(2)}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Editar transacción
+function editTransaction(transactionId) {
+    const transaction = transactions.find(t => t.id == transactionId);
+    if (!transaction) return;
+    
+    // Llenar el formulario de edición
+    document.getElementById('editTransactionId').value = transaction.id;
+    document.getElementById('editMonto').value = transaction.monto;
+    document.getElementById('editCategoria').value = transaction.categoria;
+    document.getElementById('editDescripcion').value = transaction.descripcion;
+    
+    // Seleccionar tipo
+    selectEditType(transaction.tipo);
+    
+    // Mostrar imagen si existe
+    const editImagePreview = document.getElementById('editImagePreview');
+    if (transaction.comprobante) {
+        editImagePreview.innerHTML = `
+            <div class="image-preview-container">
+                <img src="${transaction.comprobante}" alt="Comprobante actual">
+                <button type="button" class="remove-image" onclick="removeEditImage()">✕</button>
+            </div>
+        `;
+    } else {
+        editImagePreview.innerHTML = '';
+    }
+    
+    // Mostrar pantalla de edición
+    showScreen('editTransaction');
+}
+
+// Seleccionar tipo en edición
+function selectEditType(type) {
+    const editButtons = document.querySelectorAll('#editTransactionScreen .type-btn');
+    editButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.type === type) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Actualizar categorías para edición
+    const editCategoriaSelect = document.getElementById('editCategoria');
+    const currentValue = editCategoriaSelect.value;
+    
+    if (type === 'Ingreso') {
+        editCategoriaSelect.innerHTML = `
+            <option value="">Selecciona una categoría</option>
+            <option value="Salario">💼 Salario</option>
+            <option value="Otros">📦 Otros</option>
+        `;
+    } else {
+        editCategoriaSelect.innerHTML = `
+            <option value="">Selecciona una categoría</option>
+            <option value="Alimentación">🍔 Alimentación</option>
+            <option value="Transporte">🚗 Transporte</option>
+            <option value="Vivienda">🏠 Vivienda</option>
+            <option value="Servicios">💡 Servicios</option>
+            <option value="Entretenimiento">🎮 Entretenimiento</option>
+            <option value="Salud">💊 Salud</option>
+            <option value="Educación">📚 Educación</option>
+            <option value="Otros">📦 Otros</option>
+        `;
+    }
+    
+    // Restaurar valor seleccionado
+    editCategoriaSelect.value = currentValue;
+}
+
+// Preview de imagen en edición
+function previewEditImage(event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById('editImagePreview');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.innerHTML = `
+                <div class="image-preview-container">
+                    <img src="${e.target.result}" alt="Preview">
+                    <button type="button" class="remove-image" onclick="removeEditImage()">✕</button>
+                </div>
+            `;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.innerHTML = '';
+    }
+}
+
+// Eliminar imagen en edición
+function removeEditImage() {
+    document.getElementById('editComprobante').value = '';
+    document.getElementById('editImagePreview').innerHTML = '';
+}
+
+// Actualizar transacción
+async function updateTransaction(event) {
+    event.preventDefault();
+    
+    const transactionId = parseInt(document.getElementById('editTransactionId').value);
+    const monto = parseFloat(document.getElementById('editMonto').value);
+    const categoria = document.getElementById('editCategoria').value;
+    const descripcion = document.getElementById('editDescripcion').value || 'Sin descripción';
+    const comprobanteInput = document.getElementById('editComprobante');
+    
+    if (!categoria) {
+        showToast('⚠️ Selecciona una categoría');
+        return;
+    }
+    
+    // Encontrar la transacción
+    const transactionIndex = transactions.findIndex(t => t.id == transactionId);
+    if (transactionIndex === -1) {
+        showToast('❌ Transacción no encontrada');
+        return;
+    }
+    
+    // Obtener tipo seleccionado
+    const selectedType = document.querySelector('#editTransactionScreen .type-btn.active').dataset.type;
+    
+    // Actualizar datos
+    transactions[transactionIndex].monto = monto;
+    transactions[transactionIndex].categoria = categoria;
+    transactions[transactionIndex].descripcion = descripcion;
+    transactions[transactionIndex].tipo = selectedType;
+    
+    // Si hay nueva imagen, actualizarla
+    if (comprobanteInput.files && comprobanteInput.files[0]) {
+        const file = comprobanteInput.files[0];
+        const base64 = await convertImageToBase64(file);
+        transactions[transactionIndex].comprobante = base64;
+    }
+    // Si se eliminó la imagen (preview vacío y no hay archivo)
+    else if (document.getElementById('editImagePreview').innerHTML === '' && !comprobanteInput.files[0]) {
+        delete transactions[transactionIndex].comprobante;
+    }
+    
+    saveData();
+    updateUI();
+    updateAllTransactionsScreen();
+    
+    showToast(`✅ Transacción actualizada`);
+    showScreen('allTransactions');
+}
+
+// Confirmar eliminación de transacción
+function confirmDeleteTransaction() {
+    const transactionId = parseInt(document.getElementById('editTransactionId').value);
+    const transaction = transactions.find(t => t.id == transactionId);
+    
+    if (!transaction) return;
+    
+    const confirmDelete = confirm(`¿Estás seguro de eliminar esta transacción?\n\n${transaction.descripcion}\nS/. ${transaction.monto.toFixed(2)}\n\nEsta acción no se puede deshacer.`);
+    
+    if (confirmDelete) {
+        deleteTransaction(transactionId);
+    }
+}
+
+// Eliminar transacción
+function deleteTransaction(transactionId) {
+    const transactionIndex = transactions.findIndex(t => t.id == transactionId);
+    
+    if (transactionIndex === -1) {
+        showToast('❌ Transacción no encontrada');
+        return;
+    }
+    
+    const deletedTransaction = transactions[transactionIndex];
+    transactions.splice(transactionIndex, 1);
+    
+    saveData();
+    updateUI();
+    updateAllTransactionsScreen();
+    
+    showToast(`✅ Transacción eliminada: ${deletedTransaction.descripcion}`);
+    showScreen('allTransactions');
+}
+
+// Cancelar edición
+function cancelEditTransaction() {
+    showScreen('allTransactions');
 }
