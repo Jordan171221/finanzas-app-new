@@ -233,12 +233,13 @@ function selectType(type) {
 }
 
 // Guardar transacción
-function saveTransaction(event) {
+async function saveTransaction(event) {
     event.preventDefault();
     
     const monto = parseFloat(document.getElementById('monto').value);
     const categoria = document.getElementById('categoria').value;
     const descripcion = document.getElementById('descripcion').value || 'Sin descripción';
+    const comprobanteInput = document.getElementById('comprobante');
     
     if (!categoria) {
         showToast('⚠️ Selecciona una categoría');
@@ -254,19 +255,68 @@ function saveTransaction(event) {
         descripcion: descripcion
     };
     
+    // Si hay imagen, convertirla a base64
+    if (comprobanteInput.files && comprobanteInput.files[0]) {
+        const file = comprobanteInput.files[0];
+        const base64 = await convertImageToBase64(file);
+        transaction.comprobante = base64;
+    }
+    
     transactions.unshift(transaction);
     saveData();
     
-    // Limpiar formulario
-    document.getElementById('transactionForm').reset();
+    // Limpiar solo los campos del formulario (NO cambiar de pantalla)
+    document.getElementById('monto').value = '';
+    document.getElementById('categoria').value = '';
+    document.getElementById('descripcion').value = '';
+    document.getElementById('comprobante').value = '';
+    document.getElementById('imagePreview').innerHTML = '';
+    
+    // Enfocar el campo de monto para seguir agregando
+    document.getElementById('monto').focus();
     
     // Mostrar mensaje
     showToast(`✅ ${currentType} guardado: S/. ${monto.toFixed(2)}`);
     
-    // Volver al inicio
-    setTimeout(() => {
-        showScreen('home');
-    }, 1000);
+    // Actualizar el contador de transacciones en el inicio
+    updateUI();
+}
+
+// Convertir imagen a base64
+function convertImageToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// Preview de imagen
+function previewImage(event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById('imagePreview');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.innerHTML = `
+                <div class="image-preview-container">
+                    <img src="${e.target.result}" alt="Preview">
+                    <button type="button" class="remove-image" onclick="removeImage()">✕</button>
+                </div>
+            `;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.innerHTML = '';
+    }
+}
+
+// Eliminar imagen
+function removeImage() {
+    document.getElementById('comprobante').value = '';
+    document.getElementById('imagePreview').innerHTML = '';
 }
 
 // Actualizar UI
@@ -610,4 +660,3 @@ function checkInstallPrompt() {
         showToast('💡 Puedes instalar esta app en tu celular');
     });
 }
-
