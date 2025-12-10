@@ -329,6 +329,86 @@
             </div>
         </div>
 
+        <!-- All Transactions Screen -->
+        <div id="allTransactionsScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="showScreen('home')">← Volver</button>
+                <h2>Todas las Transacciones</h2>
+            </div>
+
+            <div class="transactions-container">
+                <div id="allTransactionsList" class="transactions-list">
+                    <!-- All transactions will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Transaction Screen -->
+        <div id="editTransactionScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="cancelEditTransaction()">← Cancelar</button>
+                <h2>Editar Transacción</h2>
+            </div>
+
+            <div class="form-container">
+                <div class="type-selector">
+                    <button class="type-btn" data-type="Gasto" onclick="selectEditType('Gasto')">
+                        💸 Gasto
+                    </button>
+                    <button class="type-btn" data-type="Ingreso" onclick="selectEditType('Ingreso')">
+                        💵 Ingreso
+                    </button>
+                </div>
+
+                <form id="editTransactionForm" onsubmit="updateTransaction(event)">
+                    <input type="hidden" id="editTransactionId">
+                    
+                    <div class="form-group">
+                        <label>Monto (S/.)</label>
+                        <input type="number" id="editMonto" step="0.01" required placeholder="0.00">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select id="editCategoria" required>
+                            <option value="">Selecciona una categoría</option>
+                            <option value="Alimentación">🍔 Alimentación</option>
+                            <option value="Transporte">🚗 Transporte</option>
+                            <option value="Vivienda">🏠 Vivienda</option>
+                            <option value="Servicios">💡 Servicios</option>
+                            <option value="Entretenimiento">🎮 Entretenimiento</option>
+                            <option value="Salud">💊 Salud</option>
+                            <option value="Educación">📚 Educación</option>
+                            <option value="Otros">📦 Otros</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <input type="text" id="editDescripcion" placeholder="Ej: Almuerzo en restaurante">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Comprobante (Opcional)</label>
+                        <input type="file" id="editComprobante" accept="image/*" onchange="previewEditImage(event)">
+                        <small style="color: var(--text-secondary); font-size: 12px;">
+                            📸 Puedes cambiar o agregar una foto del comprobante
+                        </small>
+                        <div id="editImagePreview" class="image-preview"></div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            💾 Guardar Cambios
+                        </button>
+                        <button type="button" class="btn-danger" onclick="confirmDeleteTransaction()">
+                            🗑️ Eliminar Transacción
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
 
     <!-- Toast Notification -->
