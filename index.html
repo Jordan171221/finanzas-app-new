@@ -228,6 +228,9 @@
                 <div id="transactionsList" class="transactions-list">
                     <!-- Transactions will be inserted here -->
                 </div>
+                <button id="verMasBtn" class="btn-ver-mas" onclick="showAllTransactions()" style="display: none;">
+                    👁️ Ver Más Transacciones
+                </button>
             </div>
 
             <button class="fab" onclick="showScreen('add')">
@@ -276,6 +279,15 @@
                     <div class="form-group">
                         <label>Descripción</label>
                         <input type="text" id="descripcion" placeholder="Ej: Almuerzo en restaurante">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Comprobante (Opcional)</label>
+                        <input type="file" id="comprobante" accept="image/*" onchange="previewImage(event)">
+                        <small style="color: var(--text-secondary); font-size: 12px;">
+                            📸 Puedes adjuntar una foto del comprobante o transferencia
+                        </small>
+                        <div id="imagePreview" class="image-preview"></div>
                     </div>
 
                     <button type="submit" class="btn-primary">
