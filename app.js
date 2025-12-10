@@ -184,8 +184,11 @@ function showScreen(screenName) {
         screen.classList.add('active');
     }
     
-    // Cerrar menú
-    toggleMenu();
+    // Cerrar menú solo si está abierto
+    const menu = document.getElementById('sideMenu');
+    if (menu && menu.classList.contains('active')) {
+        toggleMenu();
+    }
     
     // Actualizar contenido según la pantalla
     if (screenName === 'home') {
@@ -298,8 +301,12 @@ function convertImageToBase64(file) {
 function previewImage(event) {
     const file = event.target.files[0];
     const preview = document.getElementById('imagePreview');
+    const fileName = document.getElementById('fileName');
     
     if (file) {
+        fileName.textContent = file.name;
+        fileName.classList.add('file-selected');
+        
         const reader = new FileReader();
         reader.onload = (e) => {
             preview.innerHTML = `
@@ -311,6 +318,8 @@ function previewImage(event) {
         };
         reader.readAsDataURL(file);
     } else {
+        fileName.textContent = 'Ningún archivo seleccionado';
+        fileName.classList.remove('file-selected');
         preview.innerHTML = '';
     }
 }
@@ -319,6 +328,8 @@ function previewImage(event) {
 function removeImage() {
     document.getElementById('comprobante').value = '';
     document.getElementById('imagePreview').innerHTML = '';
+    document.getElementById('fileName').textContent = 'Ningún archivo seleccionado';
+    document.getElementById('fileName').classList.remove('file-selected');
 }
 
 // Actualizar UI
@@ -735,7 +746,11 @@ function editTransaction(transactionId) {
     
     // Mostrar imagen si existe
     const editImagePreview = document.getElementById('editImagePreview');
+    const editFileName = document.getElementById('editFileName');
+    
     if (transaction.comprobante) {
+        editFileName.textContent = 'Comprobante actual';
+        editFileName.classList.add('file-selected');
         editImagePreview.innerHTML = `
             <div class="image-preview-container">
                 <img src="${transaction.comprobante}" alt="Comprobante actual">
@@ -743,6 +758,8 @@ function editTransaction(transactionId) {
             </div>
         `;
     } else {
+        editFileName.textContent = 'Ningún archivo seleccionado';
+        editFileName.classList.remove('file-selected');
         editImagePreview.innerHTML = '';
     }
     
@@ -792,8 +809,12 @@ function selectEditType(type) {
 function previewEditImage(event) {
     const file = event.target.files[0];
     const preview = document.getElementById('editImagePreview');
+    const fileName = document.getElementById('editFileName');
     
     if (file) {
+        fileName.textContent = file.name;
+        fileName.classList.add('file-selected');
+        
         const reader = new FileReader();
         reader.onload = (e) => {
             preview.innerHTML = `
@@ -805,6 +826,8 @@ function previewEditImage(event) {
         };
         reader.readAsDataURL(file);
     } else {
+        fileName.textContent = 'Ningún archivo seleccionado';
+        fileName.classList.remove('file-selected');
         preview.innerHTML = '';
     }
 }
@@ -813,6 +836,8 @@ function previewEditImage(event) {
 function removeEditImage() {
     document.getElementById('editComprobante').value = '';
     document.getElementById('editImagePreview').innerHTML = '';
+    document.getElementById('editFileName').textContent = 'Ningún archivo seleccionado';
+    document.getElementById('editFileName').classList.remove('file-selected');
 }
 
 // Actualizar transacción
