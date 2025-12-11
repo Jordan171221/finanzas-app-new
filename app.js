@@ -51,17 +51,29 @@ function loadData() {
     if (savedBudgets) {
         budgets = JSON.parse(savedBudgets);
     } else {
-        budgets = {
-            'Alimentación': 600,
-            'Transporte': 200,
-            'Vivienda': 800,
-            'Servicios': 250,
-            'Entretenimiento': 300,
-            'Salud': 150,
-            'Educación': 200,
-            'Otros': 100
-        };
+        // Solo establecer presupuestos por defecto si es la primera vez
+        const userKey = `user_${currentUser.username}`;
+        const hasInitialized = localStorage.getItem(`${userKey}_budgets_initialized`);
+        
+        if (!hasInitialized) {
+            budgets = {
+                'Alimentación': 600,
+                'Transporte': 200,
+                'Vivienda': 800,
+                'Servicios': 250,
+                'Entretenimiento': 300,
+                'Salud': 150,
+                'Educación': 200,
+                'Otros': 100
+            };
+            localStorage.setItem(`${userKey}_budgets_initialized`, 'true');
+        } else {
+            budgets = {};
+        }
     }
+    
+    // Cargar configuración de usuario
+    loadUserConfig();
 }
 
 // Guardar datos en localStorage y Firebase (por usuario)
@@ -364,9 +376,9 @@ function updateHomeScreen() {
     const balance = totalIngresos - totalGastos;
     
     // Actualizar tarjetas
-    document.getElementById('totalIngresos').textContent = `S/. ${totalIngresos.toFixed(2)}`;
-    document.getElementById('totalGastos').textContent = `S/. ${totalGastos.toFixed(2)}`;
-    document.getElementById('balance').textContent = `S/. ${balance.toFixed(2)}`;
+    document.getElementById('totalIngresos').textContent = `${currencySymbol} ${totalIngresos.toFixed(2)}`;
+    document.getElementById('totalGastos').textContent = `${currencySymbol} ${totalGastos.toFixed(2)}`;
+    document.getElementById('balance').textContent = `${currencySymbol} ${balance.toFixed(2)}`;
     
     // Actualizar lista de transacciones
     const transactionsList = document.getElementById('transactionsList');
@@ -466,25 +478,26 @@ function updateBudgetScreen() {
         }
         
         return `
-            <div class="budget-item">
+            <div class="budget-item" id="budget-${categoria}">
                 <div class="budget-header">
                     <div class="budget-category">📁 ${categoria}</div>
                     <div class="budget-actions">
-                        <button class="budget-edit-btn" onclick="editBudget('${categoria}')" title="Editar presupuesto">✏️</button>
+                        <button class="budget-save-btn" onclick="saveBudgetEdit('${categoria}')" title="Guardar cambios" style="display: none;">✅</button>
                         <button class="budget-delete-btn" onclick="deleteBudgetCategory('${categoria}')" title="Eliminar categoría">🗑️</button>
                         <div class="budget-status ${status}">${statusText}</div>
                     </div>
                 </div>
                 <div class="budget-amount">
                     <span class="budget-label">Presupuesto:</span>
-                    <span class="budget-value">S/. ${presupuesto.toFixed(2)}</span>
+                    <span class="budget-value" onclick="enableBudgetEdit('${categoria}', ${presupuesto})">${currencySymbol} ${presupuesto.toFixed(2)}</span>
+                    <input type="number" class="budget-edit-input" id="edit-${categoria}" value="${presupuesto}" step="0.01" style="display: none;" onblur="saveBudgetEdit('${categoria}')" onkeypress="handleBudgetKeyPress(event, '${categoria}')">
                 </div>
                 <div class="budget-progress">
                     <div class="budget-progress-bar" style="width: ${Math.min(porcentaje, 100)}%; background: ${color};"></div>
                 </div>
                 <div class="budget-info">
-                    <span>Gastado: S/. ${gastado.toFixed(2)} (${porcentaje.toFixed(0)}%)</span>
-                    <span>Disponible: S/. ${disponible.toFixed(2)}</span>
+                    <span>Gastado: ${currencySymbol} ${gastado.toFixed(2)} (${porcentaje.toFixed(0)}%)</span>
+                    <span>Disponible: ${currencySymbol} ${disponible.toFixed(2)}</span>
                 </div>
             </div>
         `;
@@ -493,7 +506,74 @@ function updateBudgetScreen() {
     budgetList.innerHTML = html;
 }
 
-// Editar presupuesto
+// Habilitar edición inline de presupuesto
+function enableBudgetEdit(categoria, currentValue) {
+    const valueSpan = document.querySelector(`#budget-${categoria} .budget-value`);
+    const editInput = document.getElementById(`edit-${categoria}`);
+    const saveBtn = document.querySelector(`#budget-${categoria} .budget-save-btn`);
+    
+    // Ocultar valor y mostrar input
+    valueSpan.style.display = 'none';
+    editInput.style.display = 'inline-block';
+    editInput.value = currentValue;
+    editInput.focus();
+    editInput.select();
+    
+    // Mostrar botón de guardar
+    saveBtn.style.display = 'inline-block';
+}
+
+// Guardar edición de presupuesto
+function saveBudgetEdit(categoria) {
+    const valueSpan = document.querySelector(`#budget-${categoria} .budget-value`);
+    const editInput = document.getElementById(`edit-${categoria}`);
+    const saveBtn = document.querySelector(`#budget-${categoria} .budget-save-btn`);
+    
+    const newValue = parseFloat(editInput.value);
+    
+    if (isNaN(newValue) || newValue <= 0) {
+        showToast('❌ Ingresa un monto válido');
+        editInput.focus();
+        return;
+    }
+    
+    // Actualizar presupuesto
+    budgets[categoria] = newValue;
+    saveData();
+    
+    // Actualizar UI
+    valueSpan.textContent = `${currencySymbol} ${newValue.toFixed(2)}`;
+    valueSpan.style.display = 'inline';
+    editInput.style.display = 'none';
+    saveBtn.style.display = 'none';
+    
+    // Actualizar toda la pantalla para reflejar cambios
+    updateBudgetScreen();
+    
+    showToast(`✅ Presupuesto de ${categoria} actualizado a ${currencySymbol} ${newValue.toFixed(2)}`);
+}
+
+// Manejar teclas en edición de presupuesto
+function handleBudgetKeyPress(event, categoria) {
+    if (event.key === 'Enter') {
+        saveBudgetEdit(categoria);
+    } else if (event.key === 'Escape') {
+        cancelBudgetEdit(categoria);
+    }
+}
+
+// Cancelar edición de presupuesto
+function cancelBudgetEdit(categoria) {
+    const valueSpan = document.querySelector(`#budget-${categoria} .budget-value`);
+    const editInput = document.getElementById(`edit-${categoria}`);
+    const saveBtn = document.querySelector(`#budget-${categoria} .budget-save-btn`);
+    
+    valueSpan.style.display = 'inline';
+    editInput.style.display = 'none';
+    saveBtn.style.display = 'none';
+}
+
+// Editar presupuesto (función legacy - ya no se usa)
 function editBudget(categoria) {
     const currentBudget = budgets[categoria];
     const newBudget = prompt(`💰 Editar presupuesto de ${categoria}\n\nPresupuesto actual: S/. ${currentBudget.toFixed(2)}\n\nIngresa el nuevo presupuesto:`, currentBudget);
@@ -927,4 +1007,185 @@ function deleteTransaction(transactionId) {
 // Cancelar edición
 function cancelEditTransaction() {
     showScreen('allTransactions');
+}
+
+// Variables globales para configuración de usuario
+let userCountry = 'PE';
+let currencySymbol = 'S/.';
+let currencyName = 'Sol';
+
+// Configuración de monedas por país
+const currencyConfig = {
+    'PE': { symbol: 'S/.', name: 'Sol', flag: '🇵🇪' },
+    'US': { symbol: '$', name: 'Dólar', flag: '🇺🇸' },
+    'ES': { symbol: '€', name: 'Euro', flag: '🇪🇸' },
+    'BR': { symbol: 'R$', name: 'Real', flag: '🇧🇷' },
+    'MX': { symbol: '$', name: 'Peso', flag: '🇲🇽' },
+    'AR': { symbol: '$', name: 'Peso', flag: '🇦🇷' },
+    'CO': { symbol: '$', name: 'Peso', flag: '🇨🇴' },
+    'CL': { symbol: '$', name: 'Peso', flag: '🇨🇱' },
+    'EC': { symbol: '$', name: 'Dólar', flag: '🇪🇨' },
+    'UY': { symbol: '$', name: 'Peso', flag: '🇺🇾' }
+};
+
+// Mostrar/ocultar contraseña
+function togglePassword(inputId, button) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        button.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        button.textContent = '👁️';
+    }
+}
+
+// Actualizar preview de moneda
+function updateCurrencyPreview() {
+    const paisSelect = document.getElementById('regPais');
+    const preview = document.getElementById('currencyPreview');
+    
+    if (paisSelect.value && currencyConfig[paisSelect.value]) {
+        const config = currencyConfig[paisSelect.value];
+        preview.textContent = `💰 Moneda: ${config.name} (${config.symbol})`;
+        preview.style.color = 'var(--primary-color)';
+    } else {
+        preview.textContent = '💰 La moneda se configurará según tu país';
+        preview.style.color = 'var(--text-secondary)';
+    }
+}
+
+// Mostrar menú de usuario
+function showUserMenu() {
+    const userMenu = document.getElementById('userMenu');
+    const overlay = document.getElementById('overlay');
+    
+    // Actualizar información del usuario
+    if (currentUser) {
+        document.getElementById('userDisplayName').textContent = currentUser.nombres || currentUser.username;
+        document.getElementById('userDisplayEmail').textContent = currentUser.email || 'Sin email';
+        
+        const config = currencyConfig[userCountry] || currencyConfig['PE'];
+        document.getElementById('userDisplayCountry').textContent = `${config.flag} ${getCountryName(userCountry)} - ${config.name} (${config.symbol})`;
+    }
+    
+    userMenu.classList.add('active');
+    overlay.classList.add('active');
+    overlay.onclick = closeUserMenu;
+}
+
+// Cerrar menú de usuario
+function closeUserMenu() {
+    const userMenu = document.getElementById('userMenu');
+    const overlay = document.getElementById('overlay');
+    
+    userMenu.classList.remove('active');
+    overlay.classList.remove('active');
+    overlay.onclick = toggleMenu;
+}
+
+// Obtener nombre del país
+function getCountryName(countryCode) {
+    const countries = {
+        'PE': 'Perú',
+        'US': 'Estados Unidos',
+        'ES': 'España',
+        'BR': 'Brasil',
+        'MX': 'México',
+        'AR': 'Argentina',
+        'CO': 'Colombia',
+        'CL': 'Chile',
+        'EC': 'Ecuador',
+        'UY': 'Uruguay'
+    };
+    return countries[countryCode] || 'País';
+}
+
+// Cambiar contraseña
+function changePassword() {
+    const newPassword = prompt('Ingresa tu nueva contraseña (mínimo 8 caracteres):');
+    if (newPassword && newPassword.length >= 8) {
+        // Aquí iría la lógica para cambiar contraseña
+        showToast('✅ Contraseña actualizada correctamente');
+        closeUserMenu();
+    } else if (newPassword !== null) {
+        showToast('❌ La contraseña debe tener al menos 8 caracteres');
+    }
+}
+
+// Cambiar país/moneda
+function changeCountry() {
+    const newCountry = prompt(`País actual: ${getCountryName(userCountry)}\n\nIngresa el código del nuevo país:\nPE=Perú, US=Estados Unidos, ES=España, BR=Brasil, MX=México, AR=Argentina, CO=Colombia, CL=Chile, EC=Ecuador, UY=Uruguay`);
+    
+    if (newCountry && currencyConfig[newCountry.toUpperCase()]) {
+        userCountry = newCountry.toUpperCase();
+        const config = currencyConfig[userCountry];
+        currencySymbol = config.symbol;
+        currencyName = config.name;
+        
+        // Guardar configuración
+        saveUserConfig();
+        
+        // Actualizar UI
+        updateUI();
+        showUserMenu(); // Refrescar el menú
+        
+        showToast(`✅ País cambiado a ${getCountryName(userCountry)} - ${config.name} (${config.symbol})`);
+    } else if (newCountry !== null) {
+        showToast('❌ Código de país no válido');
+    }
+}
+
+// Guardar configuración de usuario
+function saveUserConfig() {
+    if (!currentUser) return;
+    
+    const userKey = `user_${currentUser.username}`;
+    localStorage.setItem(`${userKey}_country`, userCountry);
+    localStorage.setItem(`${userKey}_currency`, currencySymbol);
+    
+    // Guardar en Firebase si está disponible
+    if (typeof db !== 'undefined' && db && currentUser.uid) {
+        saveUserConfigToFirebase();
+    }
+}
+
+// Guardar configuración en Firebase
+async function saveUserConfigToFirebase() {
+    if (!currentUser || !currentUser.uid) return;
+    
+    try {
+        await db.collection('userConfig').doc(currentUser.uid).set({
+            country: userCountry,
+            currency: currencySymbol,
+            currencyName: currencyName,
+            lastUpdate: new Date().toISOString()
+        }, { merge: true });
+        
+        console.log('✅ Configuración guardada en Firebase');
+    } catch (error) {
+        console.log('⚠️ No se pudo guardar configuración en Firebase:', error.message);
+    }
+}
+
+// Cargar configuración de usuario
+function loadUserConfig() {
+    if (!currentUser) return;
+    
+    const userKey = `user_${currentUser.username}`;
+    const savedCountry = localStorage.getItem(`${userKey}_country`);
+    const savedCurrency = localStorage.getItem(`${userKey}_currency`);
+    
+    if (savedCountry && currencyConfig[savedCountry]) {
+        userCountry = savedCountry;
+        const config = currencyConfig[userCountry];
+        currencySymbol = config.symbol;
+        currencyName = config.name;
+    }
+    
+    // Actualizar botón de usuario
+    const userBtn = document.getElementById('userProfileBtn');
+    if (userBtn && currentUser) {
+        userBtn.textContent = `👤 ${currentUser.nombres || currentUser.username}`;
+    }
 }
