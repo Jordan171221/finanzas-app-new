@@ -229,6 +229,9 @@
         <!-- Overlay -->
         <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
 
+        <!-- User Menu Overlay -->
+        <div id="userMenuOverlay" class="user-menu-overlay"></div>
+
         <!-- User Menu -->
         <div id="userMenu" class="user-menu">
             <div class="user-menu-header">
@@ -311,7 +314,7 @@
 
                 <form id="transactionForm" onsubmit="saveTransaction(event)">
                     <div class="form-group">
-                        <label>Monto (S/.)</label>
+                        <label id="montoLabel">Monto (S/.)</label>
                         <input type="number" id="monto" step="0.01" required placeholder="0.00">
                     </div>
 
@@ -424,7 +427,7 @@
                     <input type="hidden" id="editTransactionId">
                     
                     <div class="form-group">
-                        <label>Monto (S/.)</label>
+                        <label id="editMontoLabel">Monto (S/.)</label>
                         <input type="number" id="editMonto" step="0.01" required placeholder="0.00">
                     </div>
 
