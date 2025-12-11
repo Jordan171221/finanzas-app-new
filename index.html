@@ -42,7 +42,10 @@
 
                 <div class="form-group">
                     <label>Contraseña</label>
-                    <input type="password" id="loginPassword" required placeholder="Mínimo 8 caracteres">
+                    <div class="password-input-container">
+                        <input type="password" id="loginPassword" required placeholder="Mínimo 8 caracteres">
+                        <button type="button" class="password-toggle" onclick="togglePassword('loginPassword', this)">👁️</button>
+                    </div>
                 </div>
 
                 <div id="loginError" class="error-message"></div>
@@ -55,7 +58,7 @@
             </p>
 
             <div class="auth-footer">
-                <p>© 2024 Jordan's</p>
+                <p>© 2025 Jordan's</p>
             </div>
         </div>
     </div>
@@ -89,7 +92,7 @@
             </div>
 
             <div class="auth-footer">
-                <p>© 2024 Jordan's</p>
+                <p>© 2025 Jordan's</p>
             </div>
         </div>
     </div>
@@ -127,18 +130,44 @@
 
                 <div class="form-group">
                     <label>Correo Electrónico</label>
-                    <input type="email" id="regEmail" required placeholder="ejemplo@correo.com">
+                    <input type="email" id="regEmail" required placeholder="ejemplo@correo.com" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}">
+                </div>
+
+                <div class="form-group">
+                    <label>País</label>
+                    <select id="regPais" required onchange="updateCurrencyPreview()">
+                        <option value="">Selecciona tu país</option>
+                        <option value="PE">🇵🇪 Perú</option>
+                        <option value="US">🇺🇸 Estados Unidos</option>
+                        <option value="ES">🇪🇸 España</option>
+                        <option value="BR">🇧🇷 Brasil</option>
+                        <option value="MX">🇲🇽 México</option>
+                        <option value="AR">🇦🇷 Argentina</option>
+                        <option value="CO">🇨🇴 Colombia</option>
+                        <option value="CL">🇨🇱 Chile</option>
+                        <option value="EC">🇪🇨 Ecuador</option>
+                        <option value="UY">🇺🇾 Uruguay</option>
+                    </select>
+                    <small id="currencyPreview" class="currency-preview">
+                        💰 La moneda se configurará según tu país
+                    </small>
                 </div>
 
                 <div class="form-group">
                     <label>Contraseña</label>
-                    <input type="password" id="regPassword" required placeholder="Mínimo 8 caracteres, incluir números" oninput="validatePassword()">
+                    <div class="password-input-container">
+                        <input type="password" id="regPassword" required placeholder="Mínimo 8 caracteres, incluir números" oninput="validatePassword()">
+                        <button type="button" class="password-toggle" onclick="togglePassword('regPassword', this)">👁️</button>
+                    </div>
                     <small id="passwordStrength" class="password-strength"></small>
                 </div>
 
                 <div class="form-group">
                     <label>Confirmar Contraseña</label>
-                    <input type="password" id="regPasswordConfirm" required placeholder="Repite tu contraseña">
+                    <div class="password-input-container">
+                        <input type="password" id="regPasswordConfirm" required placeholder="Repite tu contraseña">
+                        <button type="button" class="password-toggle" onclick="togglePassword('regPasswordConfirm', this)">👁️</button>
+                    </div>
                 </div>
 
                 <div class="form-group checkbox-group">
@@ -158,7 +187,7 @@
             </p>
 
             <div class="auth-footer">
-                <p>© 2024 Jordan's</p>
+                <p>© 2025 Jordan's</p>
             </div>
         </div>
     </div>
@@ -172,7 +201,6 @@
             <h1 class="header-title">💰 Mis Finanzas</h1>
             <div class="header-actions">
                 <button class="theme-btn" onclick="toggleTheme()" title="Cambiar Tema">🌙</button>
-                <button class="logout-btn" onclick="handleLogout()" title="Cerrar Sesión">🚪</button>
             </div>
         </header>
 
@@ -190,10 +218,36 @@
                 <button onclick="exportData()">📥 Exportar Datos</button>
                 <button onclick="clearData()">🗑️ Limpiar Datos</button>
             </nav>
+            
+            <div class="menu-footer">
+                <button class="user-profile-btn" onclick="showUserMenu()" id="userProfileBtn">
+                    👤 Usuario
+                </button>
+            </div>
         </div>
 
         <!-- Overlay -->
         <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
+
+        <!-- User Menu -->
+        <div id="userMenu" class="user-menu">
+            <div class="user-menu-header">
+                <h3>👤 Configuración de Usuario</h3>
+                <button class="close-user-menu" onclick="closeUserMenu()">✕</button>
+            </div>
+            <div class="user-menu-content">
+                <div class="user-info">
+                    <p><strong id="userDisplayName">Usuario</strong></p>
+                    <p id="userDisplayEmail">email@ejemplo.com</p>
+                    <p id="userDisplayCountry">🇵🇪 Perú - Sol (S/.)</p>
+                </div>
+                <div class="user-menu-actions">
+                    <button onclick="changePassword()" class="user-menu-btn">🔒 Cambiar Contraseña</button>
+                    <button onclick="changeCountry()" class="user-menu-btn">🌍 Cambiar País/Moneda</button>
+                    <button onclick="handleLogout()" class="user-menu-btn logout">🚪 Cerrar Sesión</button>
+                </div>
+            </div>
+        </div>
 
         <!-- Home Screen -->
         <div id="homeScreen" class="screen active">
@@ -428,7 +482,7 @@
 
     <!-- Footer -->
     <footer class="app-footer">
-        <p>© 2024 Jordan's - Todos los derechos reservados</p>
+        <p>© 2025 Jordan's - Todos los derechos reservados</p>
     </footer>
 
     <!-- Terms Modal -->
