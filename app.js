@@ -293,7 +293,7 @@ async function saveTransaction(event) {
     document.getElementById('monto').focus();
     
     // Mostrar mensaje
-    showToast(`✅ ${currentType} guardado: S/. ${monto.toFixed(2)}`);
+    showToast(`✅ ${currentType} guardado: ${currencySymbol} ${monto.toFixed(2)}`);
     
     // Actualizar el contador de transacciones en el inicio
     updateUI();
@@ -416,7 +416,7 @@ function updateHomeScreen() {
                         <div class="transaction-meta">${t.categoria} • ${dateStr}</div>
                     </div>
                     <div class="transaction-amount ${amountClass}">
-                        S/. ${t.monto.toFixed(2)}
+                        ${currencySymbol} ${t.monto.toFixed(2)}
                     </div>
                 </div>
             `;
@@ -803,7 +803,7 @@ function updateAllTransactionsScreen() {
                     <div class="transaction-meta">${t.categoria} • ${dateStr}</div>
                 </div>
                 <div class="transaction-amount ${amountClass}">
-                    S/. ${t.monto.toFixed(2)}
+                    ${currencySymbol} ${t.monto.toFixed(2)}
                 </div>
             </div>
         `;
@@ -977,7 +977,7 @@ function confirmDeleteTransaction() {
     
     if (!transaction) return;
     
-    const confirmDelete = confirm(`¿Estás seguro de eliminar esta transacción?\n\n${transaction.descripcion}\nS/. ${transaction.monto.toFixed(2)}\n\nEsta acción no se puede deshacer.`);
+    const confirmDelete = confirm(`¿Estás seguro de eliminar esta transacción?\n\n${transaction.descripcion}\n${currencySymbol} ${transaction.monto.toFixed(2)}\n\nEsta acción no se puede deshacer.`);
     
     if (confirmDelete) {
         deleteTransaction(transactionId);
@@ -1058,7 +1058,7 @@ function updateCurrencyPreview() {
 // Mostrar menú de usuario
 function showUserMenu() {
     const userMenu = document.getElementById('userMenu');
-    const overlay = document.getElementById('overlay');
+    const userMenuOverlay = document.getElementById('userMenuOverlay');
     
     // Actualizar información del usuario
     if (currentUser) {
@@ -1070,18 +1070,18 @@ function showUserMenu() {
     }
     
     userMenu.classList.add('active');
-    overlay.classList.add('active');
-    overlay.onclick = closeUserMenu;
+    userMenuOverlay.classList.add('active');
+    userMenuOverlay.onclick = closeUserMenu;
 }
 
 // Cerrar menú de usuario
 function closeUserMenu() {
     const userMenu = document.getElementById('userMenu');
-    const overlay = document.getElementById('overlay');
+    const userMenuOverlay = document.getElementById('userMenuOverlay');
     
     userMenu.classList.remove('active');
-    overlay.classList.remove('active');
-    overlay.onclick = toggleMenu;
+    userMenuOverlay.classList.remove('active');
+    userMenuOverlay.onclick = null;
 }
 
 // Obtener nombre del país
@@ -1126,9 +1126,13 @@ function changeCountry() {
         // Guardar configuración
         saveUserConfig();
         
-        // Actualizar UI
-        updateUI();
-        showUserMenu(); // Refrescar el menú
+        // Actualizar TODA la UI inmediatamente
+        updateCurrencyLabels();
+        updateHomeScreen();
+        updateBudgetScreen();
+        
+        // Cerrar menú y mostrar mensaje
+        closeUserMenu();
         
         showToast(`✅ País cambiado a ${getCountryName(userCountry)} - ${config.name} (${config.symbol})`);
     } else if (newCountry !== null) {
@@ -1187,5 +1191,37 @@ function loadUserConfig() {
     const userBtn = document.getElementById('userProfileBtn');
     if (userBtn && currentUser) {
         userBtn.textContent = `👤 ${currentUser.nombres || currentUser.username}`;
+    }
+    
+    // Actualizar etiquetas de moneda
+    updateCurrencyLabels();
+}
+
+// Actualizar etiquetas de moneda en toda la UI
+function updateCurrencyLabels() {
+    // Actualizar etiquetas de formularios
+    const montoLabel = document.getElementById('montoLabel');
+    const editMontoLabel = document.getElementById('editMontoLabel');
+    
+    if (montoLabel) {
+        montoLabel.textContent = `Monto (${currencySymbol})`;
+    }
+    if (editMontoLabel) {
+        editMontoLabel.textContent = `Monto (${currencySymbol})`;
+    }
+    
+    // Actualizar valores iniciales de las tarjetas
+    const totalIngresos = document.getElementById('totalIngresos');
+    const totalGastos = document.getElementById('totalGastos');
+    const balance = document.getElementById('balance');
+    
+    if (totalIngresos && totalIngresos.textContent.includes('0.00')) {
+        totalIngresos.textContent = `${currencySymbol} 0.00`;
+    }
+    if (totalGastos && totalGastos.textContent.includes('0.00')) {
+        totalGastos.textContent = `${currencySymbol} 0.00`;
+    }
+    if (balance && balance.textContent.includes('0.00')) {
+        balance.textContent = `${currencySymbol} 0.00`;
     }
 }
