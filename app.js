@@ -66,6 +66,8 @@ function loadData() {
                 'Educación': 200,
                 'Otros': 100
             };
+            // Guardar inmediatamente los presupuestos por defecto
+            localStorage.setItem(`${userKey}_budgets`, JSON.stringify(budgets));
             localStorage.setItem(`${userKey}_budgets_initialized`, 'true');
         } else {
             budgets = {};
@@ -316,7 +318,11 @@ function previewImage(event) {
     const fileName = document.getElementById('fileName');
     
     if (file) {
-        fileName.textContent = file.name;
+        // Determinar si es de cámara o archivo
+        const isCamera = event.target.id.includes('Camera');
+        const displayName = isCamera ? `📸 Foto capturada - ${file.name}` : `📁 ${file.name}`;
+        
+        fileName.textContent = displayName;
         fileName.classList.add('file-selected');
         
         const reader = new FileReader();
@@ -329,6 +335,13 @@ function previewImage(event) {
             `;
         };
         reader.readAsDataURL(file);
+        
+        // Sincronizar ambos inputs
+        if (isCamera) {
+            document.getElementById('comprobante').files = event.target.files;
+        } else {
+            document.getElementById('comprobanteCamera').files = event.target.files;
+        }
     } else {
         fileName.textContent = 'Ningún archivo seleccionado';
         fileName.classList.remove('file-selected');
@@ -892,7 +905,11 @@ function previewEditImage(event) {
     const fileName = document.getElementById('editFileName');
     
     if (file) {
-        fileName.textContent = file.name;
+        // Determinar si es de cámara o archivo
+        const isCamera = event.target.id.includes('Camera');
+        const displayName = isCamera ? `📸 Foto capturada - ${file.name}` : `📁 ${file.name}`;
+        
+        fileName.textContent = displayName;
         fileName.classList.add('file-selected');
         
         const reader = new FileReader();
@@ -905,6 +922,13 @@ function previewEditImage(event) {
             `;
         };
         reader.readAsDataURL(file);
+        
+        // Sincronizar ambos inputs
+        if (isCamera) {
+            document.getElementById('editComprobante').files = event.target.files;
+        } else {
+            document.getElementById('editComprobanteCamera').files = event.target.files;
+        }
     } else {
         fileName.textContent = 'Ningún archivo seleccionado';
         fileName.classList.remove('file-selected');
@@ -1101,24 +1125,104 @@ function getCountryName(countryCode) {
     return countries[countryCode] || 'País';
 }
 
-// Cambiar contraseña
-function changePassword() {
-    const newPassword = prompt('Ingresa tu nueva contraseña (mínimo 8 caracteres):');
-    if (newPassword && newPassword.length >= 8) {
-        // Aquí iría la lógica para cambiar contraseña
-        showToast('✅ Contraseña actualizada correctamente');
-        closeUserMenu();
-    } else if (newPassword !== null) {
-        showToast('❌ La contraseña debe tener al menos 8 caracteres');
+// Mostrar modal de cambiar contraseña
+function showChangePasswordModal() {
+    const modal = document.getElementById('changePasswordModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    
+    modal.classList.add('active');
+    overlay.onclick = closeChangePasswordModal;
+    
+    // Limpiar formulario
+    document.getElementById('changePasswordForm').reset();
+}
+
+// Cerrar modal de cambiar contraseña
+function closeChangePasswordModal() {
+    const modal = document.getElementById('changePasswordModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    
+    modal.classList.remove('active');
+    overlay.onclick = closeUserMenu;
+}
+
+// Manejar cambio de contraseña
+function handleChangePassword(event) {
+    event.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmNewPassword').value;
+    
+    // Validaciones
+    if (newPassword.length < 8) {
+        showToast('❌ La nueva contraseña debe tener al menos 8 caracteres');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showToast('❌ Las contraseñas no coinciden');
+        return;
+    }
+    
+    // Aquí iría la validación de contraseña actual con Firebase
+    // Por ahora simulamos que es correcta
+    
+    // Aquí iría la lógica para cambiar contraseña en Firebase
+    showToast('✅ Contraseña actualizada correctamente');
+    closeChangePasswordModal();
+    closeUserMenu();
+}
+
+// Mostrar modal de cambiar país
+function showChangeCountryModal() {
+    const modal = document.getElementById('changeCountryModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    
+    modal.classList.add('active');
+    overlay.onclick = closeChangeCountryModal;
+    
+    // Actualizar configuración actual
+    const config = currencyConfig[userCountry] || currencyConfig['PE'];
+    document.getElementById('currentCountryDisplay').textContent = `${config.flag} ${getCountryName(userCountry)} - ${config.name} (${config.symbol})`;
+    
+    // Limpiar selección
+    document.getElementById('newCountrySelect').value = '';
+    document.getElementById('newCountryPreview').textContent = 'Selecciona un país para ver la moneda';
+}
+
+// Cerrar modal de cambiar país
+function closeChangeCountryModal() {
+    const modal = document.getElementById('changeCountryModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    
+    modal.classList.remove('active');
+    overlay.onclick = closeUserMenu;
+}
+
+// Actualizar preview de nueva moneda
+function updateNewCurrencyPreview() {
+    const select = document.getElementById('newCountrySelect');
+    const preview = document.getElementById('newCountryPreview');
+    
+    if (select.value && currencyConfig[select.value]) {
+        const config = currencyConfig[select.value];
+        preview.textContent = `${config.flag} ${getCountryName(select.value)} - ${config.name} (${config.symbol})`;
+        preview.style.color = 'var(--primary-color)';
+    } else {
+        preview.textContent = 'Selecciona un país para ver la moneda';
+        preview.style.color = 'var(--text-secondary)';
     }
 }
 
-// Cambiar país/moneda
-function changeCountry() {
-    const newCountry = prompt(`País actual: ${getCountryName(userCountry)}\n\nIngresa el código del nuevo país:\nPE=Perú, US=Estados Unidos, ES=España, BR=Brasil, MX=México, AR=Argentina, CO=Colombia, CL=Chile, EC=Ecuador, UY=Uruguay`);
+// Manejar cambio de país
+function handleChangeCountry(event) {
+    event.preventDefault();
     
-    if (newCountry && currencyConfig[newCountry.toUpperCase()]) {
-        userCountry = newCountry.toUpperCase();
+    const newCountryCode = document.getElementById('newCountrySelect').value;
+    
+    if (newCountryCode && currencyConfig[newCountryCode]) {
+        userCountry = newCountryCode;
         const config = currencyConfig[userCountry];
         currencySymbol = config.symbol;
         currencyName = config.name;
@@ -1131,12 +1235,13 @@ function changeCountry() {
         updateHomeScreen();
         updateBudgetScreen();
         
-        // Cerrar menú y mostrar mensaje
+        // Cerrar modales y mostrar mensaje
+        closeChangeCountryModal();
         closeUserMenu();
         
         showToast(`✅ País cambiado a ${getCountryName(userCountry)} - ${config.name} (${config.symbol})`);
-    } else if (newCountry !== null) {
-        showToast('❌ Código de país no válido');
+    } else {
+        showToast('❌ Selecciona un país válido');
     }
 }
 
@@ -1224,4 +1329,136 @@ function updateCurrencyLabels() {
     if (balance && balance.textContent.includes('0.00')) {
         balance.textContent = `${currencySymbol} 0.00`;
     }
+}
+
+// Mostrar modal de cambio de contraseña
+function showChangePasswordModal() {
+    const modal = document.getElementById('changePasswordModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    
+    closeUserMenu();
+    modal.classList.add('active');
+    overlay.classList.add('active');
+    overlay.onclick = closeChangePasswordModal;
+}
+
+// Cerrar modal de cambio de contraseña
+function closeChangePasswordModal() {
+    const modal = document.getElementById('changePasswordModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    
+    modal.classList.remove('active');
+    overlay.classList.remove('active');
+    overlay.onclick = null;
+    
+    // Limpiar formulario
+    document.getElementById('changePasswordForm').reset();
+}
+
+// Manejar cambio de contraseña
+function handleChangePassword(event) {
+    event.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmNewPassword').value;
+    
+    // Validaciones
+    if (newPassword !== confirmPassword) {
+        showToast('❌ Las contraseñas no coinciden');
+        return;
+    }
+    
+    if (newPassword.length < 8) {
+        showToast('❌ La nueva contraseña debe tener al menos 8 caracteres');
+        return;
+    }
+    
+    // Aquí iría la validación de contraseña actual con Firebase
+    // Por ahora simulamos que es correcta
+    
+    // Actualizar contraseña (aquí iría la lógica de Firebase)
+    showToast('✅ Contraseña actualizada correctamente');
+    closeChangePasswordModal();
+}
+
+// Mostrar modal de cambio de país
+function showChangeCountryModal() {
+    const modal = document.getElementById('changeCountryModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    const currentDisplay = document.getElementById('currentCountryDisplay');
+    
+    // Actualizar información actual
+    const config = currencyConfig[userCountry] || currencyConfig['PE'];
+    currentDisplay.textContent = `${config.flag} ${getCountryName(userCountry)} - ${config.name} (${config.symbol})`;
+    
+    closeUserMenu();
+    modal.classList.add('active');
+    overlay.classList.add('active');
+    overlay.onclick = closeChangeCountryModal;
+}
+
+// Cerrar modal de cambio de país
+function closeChangeCountryModal() {
+    const modal = document.getElementById('changeCountryModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    
+    modal.classList.remove('active');
+    overlay.classList.remove('active');
+    overlay.onclick = null;
+    
+    // Limpiar formulario
+    document.getElementById('changeCountryForm').reset();
+    document.getElementById('newCurrencyPreview').textContent = 'Selecciona un país para ver la moneda';
+}
+
+// Actualizar preview de nueva moneda
+function updateNewCurrencyPreview() {
+    const select = document.getElementById('newCountrySelect');
+    const preview = document.getElementById('newCurrencyPreview');
+    
+    if (select.value && currencyConfig[select.value]) {
+        const config = currencyConfig[select.value];
+        preview.textContent = `💰 Nueva moneda: ${config.name} (${config.symbol})`;
+        preview.style.color = 'var(--primary-color)';
+    } else {
+        preview.textContent = 'Selecciona un país para ver la moneda';
+        preview.style.color = 'var(--text-secondary)';
+    }
+}
+
+// Manejar cambio de país
+function handleChangeCountry(event) {
+    event.preventDefault();
+    
+    const newCountryCode = document.getElementById('newCountrySelect').value;
+    
+    if (!newCountryCode || !currencyConfig[newCountryCode]) {
+        showToast('❌ Selecciona un país válido');
+        return;
+    }
+    
+    if (newCountryCode === userCountry) {
+        showToast('ℹ️ Ya tienes seleccionado ese país');
+        return;
+    }
+    
+    // Actualizar configuración
+    userCountry = newCountryCode;
+    const config = currencyConfig[userCountry];
+    currencySymbol = config.symbol;
+    currencyName = config.name;
+    
+    // Guardar configuración
+    saveUserConfig();
+    
+    // Actualizar TODA la UI inmediatamente
+    updateCurrencyLabels();
+    updateHomeScreen();
+    updateBudgetScreen();
+    
+    // Cerrar modal y mostrar mensaje
+    closeChangeCountryModal();
+    
+    showToast(`✅ País cambiado a ${getCountryName(userCountry)} - ${config.name} (${config.symbol})`);
 }
