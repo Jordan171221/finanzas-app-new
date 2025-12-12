@@ -466,13 +466,44 @@
                     <button class="close-config-modal" onclick="closeLogoutModal()">✕</button>
                 </div>
                 <div class="logout-modal-body">
-                    <div class="logout-icon">👋</div>
-                    <h4>¿Estás seguro que deseas cerrar sesión?</h4>
-                    <p>Se guardará toda tu información de forma segura.</p>
+                    <div class="logout-icon">😢</div>
+                    <h4>NO TE VAYAS :(</h4>
+                    <p>¿Estás seguro que deseas cerrar sesión?</p>
                 </div>
                 <div class="config-modal-actions">
-                    <button type="button" onclick="closeLogoutModal()" class="btn-secondary">Cancelar</button>
+                    <button type="button" onclick="cancelLogout()" class="btn-secondary">Cancelar</button>
                     <button type="button" onclick="confirmLogout()" class="btn-danger">🚪 Cerrar Sesión</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goodbye Modal -->
+        <div id="goodbyeModal" class="config-modal">
+            <div class="config-modal-content">
+                <div class="goodbye-modal-body">
+                    <div class="goodbye-icon">👋</div>
+                    <h3>PUES CHAU</h3>
+                    <div class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stay Modal -->
+        <div id="stayModal" class="config-modal">
+            <div class="config-modal-content">
+                <div class="stay-modal-body">
+                    <div class="stay-icon">😊</div>
+                    <h3>¡Gracias por quedarte!</h3>
+                    <p>Continuemos...</p>
+                    <div class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
                 </div>
             </div>
         </div>
