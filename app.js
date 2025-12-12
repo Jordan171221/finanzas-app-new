@@ -51,31 +51,15 @@ function loadData() {
     if (savedBudgets) {
         budgets = JSON.parse(savedBudgets);
     } else {
-        // Solo establecer presupuestos por defecto si es la primera vez
-        const userKey = `user_${currentUser.username}`;
-        const hasInitialized = localStorage.getItem(`${userKey}_budgets_initialized`);
-        
-        if (!hasInitialized) {
-            budgets = {
-                'Alimentación': 600,
-                'Transporte': 200,
-                'Vivienda': 800,
-                'Servicios': 250,
-                'Entretenimiento': 300,
-                'Salud': 150,
-                'Educación': 200,
-                'Otros': 100
-            };
-            // Guardar inmediatamente los presupuestos por defecto
-            localStorage.setItem(`${userKey}_budgets`, JSON.stringify(budgets));
-            localStorage.setItem(`${userKey}_budgets_initialized`, 'true');
-        } else {
-            budgets = {};
-        }
+        // Cargar presupuestos guardados o usar vacío si ya se inicializó
+        budgets = {};
     }
     
     // Cargar configuración de usuario
     loadUserConfig();
+    
+    // Inicializar presupuestos por defecto si es necesario
+    initializeDefaultBudgets();
 }
 
 // Guardar datos en localStorage y Firebase (por usuario)
@@ -1461,4 +1445,180 @@ function handleChangeCountry(event) {
     closeChangeCountryModal();
     
     showToast(`✅ País cambiado a ${getCountryName(userCountry)} - ${config.name} (${config.symbol})`);
+}
+
+// Inicializar presupuestos por defecto solo la primera vez
+function initializeDefaultBudgets() {
+    if (!currentUser) return;
+    
+    const userKey = `user_${currentUser.username}`;
+    const hasInitialized = localStorage.getItem(`${userKey}_budgets_initialized`);
+    
+    // Solo si es la primera vez y no hay presupuestos guardados
+    if (!hasInitialized && Object.keys(budgets).length === 0) {
+        budgets = {
+            'Alimentación': 600,
+            'Transporte': 200,
+            'Vivienda': 800,
+            'Servicios': 250,
+            'Entretenimiento': 300,
+            'Salud': 150,
+            'Educación': 200,
+            'Otros': 100
+        };
+        
+        // Guardar inmediatamente
+        localStorage.setItem(`${userKey}_budgets`, JSON.stringify(budgets));
+        localStorage.setItem(`${userKey}_budgets_initialized`, 'true');
+        
+        console.log('✅ Presupuestos por defecto inicializados');
+    }
+}
+
+// Variables para el registro por pasos
+let currentRegisterStep = 1;
+
+// Navegación entre pasos del registro
+function nextStep(step) {
+    // Validar paso actual antes de continuar
+    if (!validateCurrentStep()) {
+        return;
+    }
+    
+    // Ocultar paso actual
+    document.getElementById(`registerStep${currentRegisterStep}`).classList.remove('active');
+    document.getElementById(`step${currentRegisterStep}`).classList.remove('active');
+    
+    // Marcar paso como completado
+    document.getElementById(`step${currentRegisterStep}`).classList.add('completed');
+    if (currentRegisterStep < 3) {
+        document.getElementById(`line${currentRegisterStep}`).classList.add('completed');
+    }
+    
+    // Mostrar nuevo paso
+    currentRegisterStep = step;
+    document.getElementById(`registerStep${step}`).classList.add('active');
+    document.getElementById(`step${step}`).classList.add('active');
+}
+
+function prevStep(step) {
+    // Ocultar paso actual
+    document.getElementById(`registerStep${currentRegisterStep}`).classList.remove('active');
+    document.getElementById(`step${currentRegisterStep}`).classList.remove('active');
+    
+    // Mostrar paso anterior
+    currentRegisterStep = step;
+    document.getElementById(`registerStep${step}`).classList.add('active');
+    document.getElementById(`step${step}`).classList.add('active');
+}
+
+// Validar paso actual
+function validateCurrentStep() {
+    if (currentRegisterStep === 1) {
+        const nombres = document.getElementById('regNombres').value.trim();
+        const apellidos = document.getElementById('regApellidos').value.trim();
+        const fechaNac = document.getElementById('regFechaNac').value;
+        const username = document.getElementById('regUsername').value.trim();
+        
+        if (!nombres || !apellidos || !fechaNac || !username) {
+            showToast('❌ Completa todos los campos del paso 1');
+            return false;
+        }
+        
+        if (username.length < 4) {
+            showToast('❌ El usuario debe tener al menos 4 caracteres');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    if (currentRegisterStep === 2) {
+        const email = document.getElementById('regEmail').value.trim();
+        const pais = document.getElementById('regPais').value;
+        
+        if (!email || !pais) {
+            showToast('❌ Completa todos los campos del paso 2');
+            return false;
+        }
+        
+        // Validar formato de email
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            showToast('❌ Ingresa un correo electrónico válido');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    return true;
+}
+
+// Modal de logout profesional
+function showLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    
+    closeUserMenu();
+    modal.classList.add('active');
+    overlay.classList.add('active');
+    overlay.onclick = closeLogoutModal;
+}
+
+function closeLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    
+    modal.classList.remove('active');
+    overlay.classList.remove('active');
+    overlay.onclick = null;
+}
+
+function confirmLogout() {
+    closeLogoutModal();
+    handleLogout();
+}
+
+// Modal de éxito
+function showSuccessModal() {
+    const modal = document.getElementById('successModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    
+    modal.classList.add('active');
+    overlay.classList.add('active');
+    overlay.onclick = null; // No cerrar al hacer clic fuera
+}
+
+function closeSuccessModal() {
+    const modal = document.getElementById('successModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    
+    modal.classList.remove('active');
+    overlay.classList.remove('active');
+    
+    // Ir al login después de cerrar
+    showLogin();
+}
+
+// Actualizar función de logout para usar modal
+function handleLogout() {
+    // Limpiar datos de sesión
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    
+    // Ocultar app y mostrar login
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'block';
+    
+    showToast('👋 Sesión cerrada correctamente');
+}
+
+// Función para mostrar éxito después del registro
+function showRegistrationSuccess() {
+    // Ocultar pantalla de registro
+    document.getElementById('registerScreen').style.display = 'none';
+    
+    // Mostrar modal de éxito
+    showSuccessModal();
 }
