@@ -1433,33 +1433,57 @@ body {
 }
 
 /* Asegurar que el texto sea visible en ambos temas */
+.user-profile-btn {
+    background: var(--primary-color) !important;
+    color: white !important;
+}
+
 [data-theme="light"] .user-profile-btn {
+    background: var(--primary-color) !important;
     color: white !important;
 }
 
 [data-theme="dark"] .user-profile-btn {
+    background: var(--primary-color) !important;
     color: white !important;
 }
 
-/* Corregir visibilidad de botones de tipo en tema oscuro */
-[data-theme="dark"] .type-btn {
+/* Corregir visibilidad de botones de tipo en ambos temas */
+.type-btn {
+    background: var(--card-bg) !important;
     color: var(--text-primary) !important;
+    border: 2px solid var(--border-color) !important;
+    font-weight: 600 !important;
+}
+
+.type-btn.active {
+    background: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+}
+
+[data-theme="dark"] .type-btn {
+    background: var(--card-bg) !important;
+    color: #ffffff !important;
     border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .type-btn.active {
-    color: white !important;
     background: var(--primary-color) !important;
+    color: #ffffff !important;
+    border-color: var(--primary-color) !important;
 }
 
 [data-theme="light"] .type-btn {
-    color: var(--text-primary) !important;
+    background: var(--card-bg) !important;
+    color: #1a1f36 !important;
     border-color: var(--border-color) !important;
 }
 
 [data-theme="light"] .type-btn.active {
-    color: white !important;
     background: var(--primary-color) !important;
+    color: #ffffff !important;
+    border-color: var(--primary-color) !important;
 }
 
 /* Corregir visibilidad del botón de archivo en tema claro */
@@ -1750,23 +1774,35 @@ ilos para edición inline de presupuestos */
     .budget-amount::after {
         display: none;
     }
-}/* Est
-ilos para modales de configuración */
+}
+
+/* Estilos para modales de configuración */
 .config-modal {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0.8);
-    background: var(--card-bg);
+    background: var(--card-bg) !important;
     border: 2px solid var(--border-color);
     border-radius: 16px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
     z-index: 1003;
     width: 90%;
     max-width: 450px;
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+[data-theme="light"] .config-modal {
+    background: #ffffff !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .config-modal {
+    background: var(--card-bg) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
 }
 
 .config-modal.active {
@@ -1927,4 +1963,183 @@ ilos para modales de configuración */
 [data-theme="dark"] .user-menu {
     background: var(--card-bg) !important;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}/* Est
+ilos para registro por pasos */
+.register-progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+    padding: 0 20px;
+}
+
+.progress-step {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--border-color);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.progress-step.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.progress-step.completed {
+    background: var(--accent-green);
+    color: white;
+}
+
+.progress-line {
+    width: 60px;
+    height: 3px;
+    background: var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.progress-line.completed {
+    background: var(--accent-green);
+}
+
+.register-step {
+    display: none;
+}
+
+.register-step.active {
+    display: block;
+}
+
+.register-step-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.register-step-actions .btn-secondary,
+.register-step-actions .btn-primary {
+    flex: 1;
+}
+
+/* Estilos para modal de logout */
+.logout-modal-body {
+    padding: 20px;
+    text-align: center;
+}
+
+.logout-icon {
+    font-size: 4rem;
+    margin-bottom: 15px;
+}
+
+.logout-modal-body h4 {
+    margin: 0 0 10px 0;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+}
+
+.logout-modal-body p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* Estilos para modal de éxito */
+.success-modal-header {
+    text-align: center;
+    padding: 20px 20px 0 20px;
+}
+
+.success-icon {
+    font-size: 4rem;
+    margin-bottom: 15px;
+}
+
+.success-modal-header h3 {
+    margin: 0;
+    color: var(--primary-color);
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.success-modal-body {
+    padding: 20px;
+    text-align: center;
+}
+
+.success-modal-body p {
+    margin: 0 0 15px 0;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.success-features {
+    background: var(--bg-main);
+    border-radius: 12px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.feature-item {
+    padding: 8px 0;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.feature-item:last-child {
+    border-bottom: none;
+}
+
+/* Responsive para registro por pasos */
+@media (max-width: 768px) {
+    .register-progress {
+        padding: 0 10px;
+    }
+    
+    .progress-step {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+    
+    .progress-line {
+        width: 40px;
+    }
+    
+    .register-step-actions {
+        flex-direction: column;
+    }
+}
+
+/* Mejorar contraste de botones de tipo */
+.type-selector {
+    margin-bottom: 20px;
+}
+
+.type-selector .type-btn {
+    padding: 12px 20px;
+    font-size: 1rem;
+    margin: 0 5px;
+    min-width: 120px;
+}
+
+/* Asegurar fondo sólido en todos los modales */
+.config-modal-content {
+    background: var(--card-bg) !important;
+    border-radius: 16px;
+}
+
+[data-theme="light"] .config-modal-content {
+    background: #ffffff !important;
+}
+
+[data-theme="dark"] .config-modal-content {
+    background: var(--card-bg) !important;
 }
