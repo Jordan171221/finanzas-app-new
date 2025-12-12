@@ -1434,11 +1434,41 @@ body {
 
 /* Asegurar que el texto sea visible en ambos temas */
 [data-theme="light"] .user-profile-btn {
-    color: white;
+    color: white !important;
 }
 
 [data-theme="dark"] .user-profile-btn {
-    color: white;
+    color: white !important;
+}
+
+/* Corregir visibilidad de botones de tipo en tema oscuro */
+[data-theme="dark"] .type-btn {
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .type-btn.active {
+    color: white !important;
+    background: var(--primary-color) !important;
+}
+
+[data-theme="light"] .type-btn {
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .type-btn.active {
+    color: white !important;
+    background: var(--primary-color) !important;
+}
+
+/* Corregir visibilidad del botón de archivo en tema claro */
+[data-theme="light"] .file-input-btn {
+    color: white !important;
+}
+
+[data-theme="dark"] .file-input-btn {
+    color: white !important;
 }
 
 .user-profile-btn:hover {
@@ -1720,4 +1750,181 @@ ilos para edición inline de presupuestos */
     .budget-amount::after {
         display: none;
     }
+}/* Est
+ilos para modales de configuración */
+.config-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    z-index: 1003;
+    width: 90%;
+    max-width: 450px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.config-modal.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.config-modal-content {
+    padding: 0;
+}
+
+.config-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 2px solid var(--border-color);
+    background: var(--bg-main);
+    border-radius: 14px 14px 0 0;
+}
+
+.config-modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.close-config-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.close-config-modal:hover {
+    background: var(--accent-red);
+    color: white;
+}
+
+.config-modal form {
+    padding: 20px;
+}
+
+.current-country-info {
+    background: var(--bg-main);
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.current-country-info p {
+    margin: 5px 0;
+    color: var(--text-primary);
+}
+
+.current-country-info p:first-child {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.current-country-info p:last-child {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+}
+
+.config-modal-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-secondary {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.btn-secondary:hover {
+    background: var(--bg-main);
+    border-color: var(--text-secondary);
+}
+
+.config-modal .btn-primary {
+    flex: 1;
+}
+
+/* Estilos para botones de archivo mejorados */
+.file-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.file-buttons .file-input-btn {
+    flex: 1;
+    min-width: auto;
+}
+
+.camera-btn {
+    background: var(--accent-green) !important;
+}
+
+.camera-btn:hover {
+    background: #16a34a !important;
+}
+
+/* Responsive para modales */
+@media (max-width: 768px) {
+    .config-modal {
+        width: 95%;
+        max-width: none;
+    }
+    
+    .config-modal-header {
+        padding: 15px;
+    }
+    
+    .config-modal form {
+        padding: 15px;
+    }
+    
+    .config-modal-actions {
+        flex-direction: column;
+    }
+    
+    .file-buttons {
+        flex-direction: column;
+    }
+}
+
+/* Mejorar el fondo del menú de usuario */
+.user-menu {
+    background: var(--card-bg) !important;
+    backdrop-filter: blur(10px);
+}
+
+[data-theme="light"] .user-menu {
+    background: #ffffff !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .user-menu {
+    background: var(--card-bg) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
