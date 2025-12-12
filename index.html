@@ -102,85 +102,117 @@
         <div class="auth-container">
             <div class="auth-logo">💰</div>
             <h1 class="auth-title">Crear Cuenta</h1>
-            <p class="auth-subtitle">Completa tus datos</p>
+            <div class="register-progress">
+                <div class="progress-step active" id="step1">1</div>
+                <div class="progress-line" id="line1"></div>
+                <div class="progress-step" id="step2">2</div>
+                <div class="progress-line" id="line2"></div>
+                <div class="progress-step" id="step3">3</div>
+            </div>
 
-            <form id="registerForm" onsubmit="handleRegister(event)">
-                <div class="form-group">
-                    <label>Nombres Completos</label>
-                    <input type="text" id="regNombres" required placeholder="Ej: Jordan Alejandro" oninput="generateUsername()">
-                </div>
-
-                <div class="form-group">
-                    <label>Apellidos Completos</label>
-                    <input type="text" id="regApellidos" required placeholder="Ej: Morales Vasquez" oninput="generateUsername()">
-                </div>
-
-                <div class="form-group">
-                    <label>Fecha de Nacimiento</label>
-                    <input type="date" id="regFechaNac" required oninput="generateUsername()">
-                </div>
-
-                <div class="form-group">
-                    <label>Usuario (sugerido, puedes editarlo)</label>
-                    <input type="text" id="regUsername" placeholder="Se generará automáticamente" minlength="4" maxlength="20">
-                    <small style="color: var(--text-secondary); font-size: 12px;">
-                        💡 Sugerencia automática. Puedes cambiarlo si lo deseas.
-                    </small>
-                </div>
-
-                <div class="form-group">
-                    <label>Correo Electrónico</label>
-                    <input type="email" id="regEmail" required placeholder="ejemplo@correo.com" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}">
-                </div>
-
-                <div class="form-group">
-                    <label>País</label>
-                    <select id="regPais" required onchange="updateCurrencyPreview()">
-                        <option value="">Selecciona tu país</option>
-                        <option value="PE">🇵🇪 Perú</option>
-                        <option value="US">🇺🇸 Estados Unidos</option>
-                        <option value="ES">🇪🇸 España</option>
-                        <option value="BR">🇧🇷 Brasil</option>
-                        <option value="MX">🇲🇽 México</option>
-                        <option value="AR">🇦🇷 Argentina</option>
-                        <option value="CO">🇨🇴 Colombia</option>
-                        <option value="CL">🇨🇱 Chile</option>
-                        <option value="EC">🇪🇨 Ecuador</option>
-                        <option value="UY">🇺🇾 Uruguay</option>
-                    </select>
-                    <small id="currencyPreview" class="currency-preview">
-                        💰 La moneda se configurará según tu país
-                    </small>
-                </div>
-
-                <div class="form-group">
-                    <label>Contraseña</label>
-                    <div class="password-input-container">
-                        <input type="password" id="regPassword" required placeholder="Mínimo 8 caracteres, incluir números" oninput="validatePassword()">
-                        <button type="button" class="password-toggle" onclick="togglePassword('regPassword', this)">👁️</button>
+            <!-- Paso 1: Datos Personales -->
+            <div id="registerStep1" class="register-step active">
+                <p class="auth-subtitle">Paso 1: Datos Personales</p>
+                <form id="registerForm1">
+                    <div class="form-group">
+                        <label>Nombres Completos</label>
+                        <input type="text" id="regNombres" required placeholder="Ej: Jordan Alejandro" oninput="generateUsername()">
                     </div>
-                    <small id="passwordStrength" class="password-strength"></small>
-                </div>
 
-                <div class="form-group">
-                    <label>Confirmar Contraseña</label>
-                    <div class="password-input-container">
-                        <input type="password" id="regPasswordConfirm" required placeholder="Repite tu contraseña">
-                        <button type="button" class="password-toggle" onclick="togglePassword('regPasswordConfirm', this)">👁️</button>
+                    <div class="form-group">
+                        <label>Apellidos Completos</label>
+                        <input type="text" id="regApellidos" required placeholder="Ej: Morales Vasquez" oninput="generateUsername()">
                     </div>
-                </div>
 
-                <div class="form-group checkbox-group">
-                    <label>
-                        <input type="checkbox" id="regTerms" required>
-                        Acepto los <a href="#" onclick="showTerms()">términos y políticas de Jordan's</a>
-                    </label>
-                </div>
+                    <div class="form-group">
+                        <label>Fecha de Nacimiento</label>
+                        <input type="date" id="regFechaNac" required oninput="generateUsername()">
+                    </div>
 
-                <div id="registerError" class="error-message"></div>
+                    <div class="form-group">
+                        <label>Usuario (sugerido, puedes editarlo)</label>
+                        <input type="text" id="regUsername" placeholder="Se generará automáticamente" minlength="4" maxlength="20">
+                        <small style="color: var(--text-secondary); font-size: 12px;">
+                            💡 Sugerencia automática. Puedes cambiarlo si lo deseas.
+                        </small>
+                    </div>
 
-                <button type="submit" class="btn-primary">Crear Cuenta</button>
-            </form>
+                    <button type="button" onclick="nextStep(2)" class="btn-primary">Continuar →</button>
+                </form>
+            </div>
+
+            <!-- Paso 2: Correo y País -->
+            <div id="registerStep2" class="register-step">
+                <p class="auth-subtitle">Paso 2: Correo y País</p>
+                <form id="registerForm2">
+                    <div class="form-group">
+                        <label>Correo Electrónico</label>
+                        <input type="email" id="regEmail" required placeholder="ejemplo@correo.com" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}">
+                    </div>
+
+                    <div class="form-group">
+                        <label>País</label>
+                        <select id="regPais" required onchange="updateCurrencyPreview()">
+                            <option value="">Selecciona tu país</option>
+                            <option value="PE">🇵🇪 Perú</option>
+                            <option value="US">🇺🇸 Estados Unidos</option>
+                            <option value="ES">🇪🇸 España</option>
+                            <option value="BR">🇧🇷 Brasil</option>
+                            <option value="MX">🇲🇽 México</option>
+                            <option value="AR">🇦🇷 Argentina</option>
+                            <option value="CO">🇨🇴 Colombia</option>
+                            <option value="CL">🇨🇱 Chile</option>
+                            <option value="EC">🇪🇨 Ecuador</option>
+                            <option value="UY">🇺🇾 Uruguay</option>
+                        </select>
+                        <small id="currencyPreview" class="currency-preview">
+                            💰 La moneda se configurará según tu país
+                        </small>
+                    </div>
+
+                    <div class="register-step-actions">
+                        <button type="button" onclick="prevStep(1)" class="btn-secondary">← Anterior</button>
+                        <button type="button" onclick="nextStep(3)" class="btn-primary">Continuar →</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Paso 3: Contraseña y Términos -->
+            <div id="registerStep3" class="register-step">
+                <p class="auth-subtitle">Paso 3: Seguridad</p>
+                <form id="registerForm3" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <div class="password-input-container">
+                            <input type="password" id="regPassword" required placeholder="Mínimo 8 caracteres, incluir números" oninput="validatePassword()">
+                            <button type="button" class="password-toggle" onclick="togglePassword('regPassword', this)">👁️</button>
+                        </div>
+                        <small id="passwordStrength" class="password-strength"></small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Confirmar Contraseña</label>
+                        <div class="password-input-container">
+                            <input type="password" id="regPasswordConfirm" required placeholder="Repite tu contraseña">
+                            <button type="button" class="password-toggle" onclick="togglePassword('regPasswordConfirm', this)">👁️</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" id="regTerms" required>
+                            Acepto los <a href="#" onclick="showTerms()">términos y políticas de Jordan's</a>
+                        </label>
+                    </div>
+
+                    <div id="registerError" class="error-message"></div>
+
+                    <div class="register-step-actions">
+                        <button type="button" onclick="prevStep(2)" class="btn-secondary">← Anterior</button>
+                        <button type="submit" class="btn-primary">✨ Crear Cuenta</button>
+                    </div>
+                </form>
+            </div>
 
             <p class="auth-link">
                 ¿Ya tienes cuenta? <a href="#" onclick="showLogin()">Inicia sesión aquí</a>
@@ -188,6 +220,29 @@
 
             <div class="auth-footer">
                 <p>© 2025 Jordan's</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="config-modal">
+        <div class="config-modal-content">
+            <div class="success-modal-header">
+                <div class="success-icon">🎉</div>
+                <h3>¡Bienvenido a Finanzas App!</h3>
+            </div>
+            <div class="success-modal-body">
+                <p><strong>¡Gracias por usar mi aplicación de finanzas!</strong></p>
+                <p>Espero que sea de tu agrado y te ayude a gestionar mejor tus finanzas personales.</p>
+                <div class="success-features">
+                    <div class="feature-item">💰 Gestiona tus ingresos y gastos</div>
+                    <div class="feature-item">📊 Controla tus presupuestos</div>
+                    <div class="feature-item">🌍 Soporte para múltiples monedas</div>
+                    <div class="feature-item">☁️ Sincronización automática</div>
+                </div>
+            </div>
+            <div class="config-modal-actions">
+                <button type="button" onclick="closeSuccessModal()" class="btn-primary">🚀 Comenzar a Usar</button>
             </div>
         </div>
     </div>
@@ -247,7 +302,7 @@
                 <div class="user-menu-actions">
                     <button onclick="showChangePasswordModal()" class="user-menu-btn">🔒 Cambiar Contraseña</button>
                     <button onclick="showChangeCountryModal()" class="user-menu-btn">🌍 Cambiar País/Moneda</button>
-                    <button onclick="handleLogout()" class="user-menu-btn logout">🚪 Cerrar Sesión</button>
+                    <button onclick="showLogoutModal()" class="user-menu-btn logout">🚪 Cerrar Sesión</button>
                 </div>
             </div>
         </div>
@@ -400,6 +455,25 @@
                         <button type="submit" class="btn-primary">🌍 Cambiar País</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Logout Confirmation Modal -->
+        <div id="logoutModal" class="config-modal">
+            <div class="config-modal-content">
+                <div class="config-modal-header">
+                    <h3>🚪 Cerrar Sesión</h3>
+                    <button class="close-config-modal" onclick="closeLogoutModal()">✕</button>
+                </div>
+                <div class="logout-modal-body">
+                    <div class="logout-icon">👋</div>
+                    <h4>¿Estás seguro que deseas cerrar sesión?</h4>
+                    <p>Se guardará toda tu información de forma segura.</p>
+                </div>
+                <div class="config-modal-actions">
+                    <button type="button" onclick="closeLogoutModal()" class="btn-secondary">Cancelar</button>
+                    <button type="button" onclick="confirmLogout()" class="btn-danger">🚪 Cerrar Sesión</button>
+                </div>
             </div>
         </div>
 
