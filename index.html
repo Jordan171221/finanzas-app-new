@@ -245,10 +245,161 @@
                     <p id="userDisplayCountry">🇵🇪 Perú - Sol (S/.)</p>
                 </div>
                 <div class="user-menu-actions">
-                    <button onclick="changePassword()" class="user-menu-btn">🔒 Cambiar Contraseña</button>
-                    <button onclick="changeCountry()" class="user-menu-btn">🌍 Cambiar País/Moneda</button>
+                    <button onclick="showChangePasswordModal()" class="user-menu-btn">🔒 Cambiar Contraseña</button>
+                    <button onclick="showChangeCountryModal()" class="user-menu-btn">🌍 Cambiar País/Moneda</button>
                     <button onclick="handleLogout()" class="user-menu-btn logout">🚪 Cerrar Sesión</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Change Password Modal -->
+        <div id="changePasswordModal" class="config-modal">
+            <div class="config-modal-content">
+                <div class="config-modal-header">
+                    <h3>🔒 Cambiar Contraseña</h3>
+                    <button class="close-config-modal" onclick="closeChangePasswordModal()">✕</button>
+                </div>
+                <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+                    <div class="form-group">
+                        <label>Contraseña Actual</label>
+                        <div class="password-input-container">
+                            <input type="password" id="currentPassword" required placeholder="Ingresa tu contraseña actual">
+                            <button type="button" class="password-toggle" onclick="togglePassword('currentPassword', this)">👁️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nueva Contraseña</label>
+                        <div class="password-input-container">
+                            <input type="password" id="newPassword" required placeholder="Mínimo 8 caracteres" minlength="8">
+                            <button type="button" class="password-toggle" onclick="togglePassword('newPassword', this)">👁️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirmar Nueva Contraseña</label>
+                        <div class="password-input-container">
+                            <input type="password" id="confirmNewPassword" required placeholder="Repite la nueva contraseña">
+                            <button type="button" class="password-toggle" onclick="togglePassword('confirmNewPassword', this)">👁️</button>
+                        </div>
+                    </div>
+                    <div class="config-modal-actions">
+                        <button type="button" onclick="closeChangePasswordModal()" class="btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn-primary">🔒 Cambiar Contraseña</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Change Country Modal -->
+        <div id="changeCountryModal" class="config-modal">
+            <div class="config-modal-content">
+                <div class="config-modal-header">
+                    <h3>🌍 Cambiar País y Moneda</h3>
+                    <button class="close-config-modal" onclick="closeChangeCountryModal()">✕</button>
+                </div>
+                <div class="current-country-info">
+                    <p><strong>País Actual:</strong></p>
+                    <p id="currentCountryDisplay">🇵🇪 Perú - Sol (S/.)</p>
+                </div>
+                <form id="changeCountryForm" onsubmit="handleChangeCountry(event)">
+                    <div class="form-group">
+                        <label>Seleccionar Nuevo País</label>
+                        <select id="newCountrySelect" required onchange="updateNewCurrencyPreview()">
+                            <option value="">Selecciona un país</option>
+                            <option value="PE">🇵🇪 Perú</option>
+                            <option value="US">🇺🇸 Estados Unidos</option>
+                            <option value="ES">🇪🇸 España</option>
+                            <option value="BR">🇧🇷 Brasil</option>
+                            <option value="MX">🇲🇽 México</option>
+                            <option value="AR">🇦🇷 Argentina</option>
+                            <option value="CO">🇨🇴 Colombia</option>
+                            <option value="CL">🇨🇱 Chile</option>
+                            <option value="EC">🇪🇨 Ecuador</option>
+                            <option value="UY">🇺🇾 Uruguay</option>
+                        </select>
+                        <small id="newCurrencyPreview" class="currency-preview">
+                            Selecciona un país para ver la moneda
+                        </small>
+                    </div>
+                    <div class="config-modal-actions">
+                        <button type="button" onclick="closeChangeCountryModal()" class="btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn-primary">🌍 Cambiar País</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="changePasswordModal" class="config-modal">
+            <div class="config-modal-content">
+                <div class="config-modal-header">
+                    <h3>🔒 Cambiar Contraseña</h3>
+                    <button class="close-config-modal" onclick="closeChangePasswordModal()">✕</button>
+                </div>
+                <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+                    <div class="form-group">
+                        <label>Contraseña Actual</label>
+                        <div class="password-input-container">
+                            <input type="password" id="currentPassword" required placeholder="Ingresa tu contraseña actual">
+                            <button type="button" class="password-toggle" onclick="togglePassword('currentPassword', this)">👁️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nueva Contraseña</label>
+                        <div class="password-input-container">
+                            <input type="password" id="newPassword" required placeholder="Mínimo 8 caracteres" minlength="8">
+                            <button type="button" class="password-toggle" onclick="togglePassword('newPassword', this)">👁️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirmar Nueva Contraseña</label>
+                        <div class="password-input-container">
+                            <input type="password" id="confirmNewPassword" required placeholder="Repite la nueva contraseña">
+                            <button type="button" class="password-toggle" onclick="togglePassword('confirmNewPassword', this)">👁️</button>
+                        </div>
+                    </div>
+                    <div class="config-modal-actions">
+                        <button type="button" onclick="closeChangePasswordModal()" class="btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn-primary">💾 Cambiar Contraseña</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Change Country Modal -->
+        <div id="changeCountryModal" class="config-modal">
+            <div class="config-modal-content">
+                <div class="config-modal-header">
+                    <h3>🌍 Cambiar País y Moneda</h3>
+                    <button class="close-config-modal" onclick="closeChangeCountryModal()">✕</button>
+                </div>
+                <form id="changeCountryForm" onsubmit="handleChangeCountry(event)">
+                    <div class="current-config">
+                        <h4>Configuración Actual:</h4>
+                        <p id="currentCountryDisplay">🇵🇪 Perú - Sol (S/.)</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Seleccionar Nuevo País</label>
+                        <select id="newCountrySelect" required onchange="updateNewCurrencyPreview()">
+                            <option value="">Selecciona un país</option>
+                            <option value="PE">🇵🇪 Perú</option>
+                            <option value="US">🇺🇸 Estados Unidos</option>
+                            <option value="ES">🇪🇸 España</option>
+                            <option value="BR">🇧🇷 Brasil</option>
+                            <option value="MX">🇲🇽 México</option>
+                            <option value="AR">🇦🇷 Argentina</option>
+                            <option value="CO">🇨🇴 Colombia</option>
+                            <option value="CL">🇨🇱 Chile</option>
+                            <option value="EC">🇪🇨 Ecuador</option>
+                            <option value="UY">🇺🇾 Uruguay</option>
+                        </select>
+                    </div>
+                    <div class="new-config-preview">
+                        <h4>Nueva Configuración:</h4>
+                        <p id="newCountryPreview">Selecciona un país para ver la moneda</p>
+                    </div>
+                    <div class="config-modal-actions">
+                        <button type="button" onclick="closeChangeCountryModal()" class="btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn-primary">🌍 Cambiar País</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -342,13 +493,17 @@
                         <label>Comprobante (Opcional)</label>
                         <div class="file-input-container">
                             <input type="file" id="comprobante" accept="image/*" onchange="previewImage(event)" class="file-input-hidden">
+                            <input type="file" id="comprobanteCamera" accept="image/*" capture="environment" onchange="previewImage(event)" class="file-input-hidden">
                             <button type="button" class="file-input-btn" onclick="document.getElementById('comprobante').click()">
-                                📸 Seleccionar Archivo
+                                📁 Seleccionar Archivo
+                            </button>
+                            <button type="button" class="file-input-btn camera-btn" onclick="document.getElementById('comprobanteCamera').click()">
+                                📸 Tomar Foto
                             </button>
                             <span id="fileName" class="file-name">Ningún archivo seleccionado</span>
                         </div>
                         <small style="color: var(--text-secondary); font-size: 12px;">
-                            📸 Puedes adjuntar una foto del comprobante o transferencia
+                            📁 Selecciona de galería o 📸 toma una foto del comprobante
                         </small>
                         <div id="imagePreview" class="image-preview"></div>
                     </div>
@@ -455,13 +610,17 @@
                         <label>Comprobante (Opcional)</label>
                         <div class="file-input-container">
                             <input type="file" id="editComprobante" accept="image/*" onchange="previewEditImage(event)" class="file-input-hidden">
+                            <input type="file" id="editComprobanteCamera" accept="image/*" capture="environment" onchange="previewEditImage(event)" class="file-input-hidden">
                             <button type="button" class="file-input-btn" onclick="document.getElementById('editComprobante').click()">
-                                📸 Seleccionar Archivo
+                                📁 Seleccionar Archivo
+                            </button>
+                            <button type="button" class="file-input-btn camera-btn" onclick="document.getElementById('editComprobanteCamera').click()">
+                                📸 Tomar Foto
                             </button>
                             <span id="editFileName" class="file-name">Ningún archivo seleccionado</span>
                         </div>
                         <small style="color: var(--text-secondary); font-size: 12px;">
-                            📸 Puedes cambiar o agregar una foto del comprobante
+                            📁 Selecciona de galería o 📸 toma una foto del comprobante
                         </small>
                         <div id="editImagePreview" class="image-preview"></div>
                     </div>
