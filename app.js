@@ -1454,24 +1454,31 @@ function initializeDefaultBudgets() {
     const userKey = `user_${currentUser.username}`;
     const hasInitialized = localStorage.getItem(`${userKey}_budgets_initialized`);
     
-    // Solo si es la primera vez y no hay presupuestos guardados
-    if (!hasInitialized && Object.keys(budgets).length === 0) {
-        budgets = {
-            'Alimentación': 600,
-            'Transporte': 200,
-            'Vivienda': 800,
-            'Servicios': 250,
-            'Entretenimiento': 300,
-            'Salud': 150,
-            'Educación': 200,
-            'Otros': 100
-        };
+    // Solo si es la primera vez (nunca se ha inicializado)
+    if (!hasInitialized) {
+        // Solo crear presupuestos por defecto si no hay ninguno guardado
+        const savedBudgets = localStorage.getItem(`${userKey}_budgets`);
         
-        // Guardar inmediatamente
-        localStorage.setItem(`${userKey}_budgets`, JSON.stringify(budgets));
+        if (!savedBudgets) {
+            budgets = {
+                'Alimentación': 600,
+                'Transporte': 200,
+                'Vivienda': 800,
+                'Servicios': 250,
+                'Entretenimiento': 300,
+                'Salud': 150,
+                'Educación': 200,
+                'Otros': 100
+            };
+            
+            // Guardar inmediatamente
+            localStorage.setItem(`${userKey}_budgets`, JSON.stringify(budgets));
+            console.log('✅ Presupuestos por defecto creados');
+        }
+        
+        // Marcar como inicializado (independientemente de si se crearon o no)
         localStorage.setItem(`${userKey}_budgets_initialized`, 'true');
-        
-        console.log('✅ Presupuestos por defecto inicializados');
+        console.log('✅ Usuario marcado como inicializado');
     }
 }
 
@@ -1575,9 +1582,45 @@ function closeLogoutModal() {
     overlay.onclick = null;
 }
 
-function confirmLogout() {
+function cancelLogout() {
+    // Cerrar modal de logout
     closeLogoutModal();
-    handleLogout();
+    
+    // Mostrar modal de "gracias por quedarte"
+    const stayModal = document.getElementById('stayModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    
+    stayModal.classList.add('active');
+    overlay.classList.add('active');
+    overlay.onclick = null;
+    
+    // Cerrar automáticamente después de 2 segundos
+    setTimeout(() => {
+        stayModal.classList.remove('active');
+        overlay.classList.remove('active');
+        // Volver al inicio
+        showScreen('home');
+    }, 2000);
+}
+
+function confirmLogout() {
+    // Cerrar modal de confirmación
+    closeLogoutModal();
+    
+    // Mostrar modal de despedida
+    const goodbyeModal = document.getElementById('goodbyeModal');
+    const overlay = document.getElementById('userMenuOverlay');
+    
+    goodbyeModal.classList.add('active');
+    overlay.classList.add('active');
+    overlay.onclick = null;
+    
+    // Después de 3 segundos, hacer logout real
+    setTimeout(() => {
+        goodbyeModal.classList.remove('active');
+        overlay.classList.remove('active');
+        handleLogout();
+    }, 3000);
 }
 
 // Modal de éxito
@@ -1601,15 +1644,29 @@ function closeSuccessModal() {
     showLogin();
 }
 
-// Actualizar función de logout para usar modal
+// Actualizar función de logout para limpiar completamente
 function handleLogout() {
-    // Limpiar datos de sesión
+    // Limpiar TODOS los datos de sesión
     currentUser = null;
-    localStorage.removeItem('currentUser');
+    transactions = [];
+    budgets = {};
+    userCountry = 'PE';
+    currencySymbol = 'S/.';
+    currencyName = 'Sol';
+    
+    // Limpiar localStorage completamente
+    localStorage.clear();
+    
+    // Limpiar campos de login
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
     
     // Ocultar app y mostrar login
     document.getElementById('app').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'block';
+    
+    // Ocultar loading si está visible
+    document.getElementById('loading').style.display = 'none';
     
     showToast('👋 Sesión cerrada correctamente');
 }
